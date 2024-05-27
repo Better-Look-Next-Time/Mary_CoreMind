@@ -1,0 +1,19 @@
+{
+  "name": "mary",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "prettier": "prettier . -w"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "openai": "^4.40.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.2.5"
+  }
+}
