@@ -44,14 +44,14 @@ export async function mary(question: string, chatId: string, user: string) {
 			[
 				{
 					role: 'system',
-					content: character,
+					content: systemPromot,
 				},
 				{
 					role: 'user',
 					content: promot,
 				},
 			],
-			'gpt-3.5-turbo-0125',
+			'mixtral-8x7b-instruct',
 			0.6,
 			1000
 		)) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'

@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 import type { ModelNmaeType, ModelRoleType } from '../models/openai/types'
 
-import { systemPromot } from '../assets/character'
+import { character, systemPromot } from '../assets/character'
 
 import { counterTokens } from './counterTokens'
 
@@ -70,7 +70,7 @@ export function getTokens(tableName :string, model :ModelNmaeType) {
 
 export function addSystem(tableName: string, model: ModelNmaeType) {
 	if (db.query(`SELECT * FROM "${tableName}" WHERE ai=?1`).get(model) == null) {
-		insertInDateBase(tableName, systemPromot, 'system', model, 'ai', 1, counterTokens(systemPromot))
+		insertInDateBase(tableName, character, 'system', model, 'ai', 1, counterTokens(character))
 	} else {
 		console.log('Я уже довно добавил системник')
 	}

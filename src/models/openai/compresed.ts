@@ -39,5 +39,5 @@ export async function compresed(history: any) {
 		500
 	)
 
-	return answer
+	return `[${new Date()}] ${answer}`
 }
