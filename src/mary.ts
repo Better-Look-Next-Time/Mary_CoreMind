@@ -3,7 +3,7 @@ import { requestFromAi } from './models/openai/openai'
 
 import { chatGPT } from './models/openai/chatGPT'
 import { mixtrial } from './models/openai/7x8b'
-
+import { command } from './models/openai/commandR'
 // DB
 import { createTable, getCounter, getHistory, getTokens, insertInDateBase } from './helpers/db'
 
@@ -16,7 +16,8 @@ import { counterTokens } from './helpers/counterTokens'
 import { sleep } from 'bun'
 
 
-const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct']
+const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct', 'command-r-plus']
+
 
 export async function mary(question: string, chatId: string, user: string) {
 	createTable(chatId)
@@ -26,18 +27,19 @@ export async function mary(question: string, chatId: string, user: string) {
 
 	const reqests = await Promise.allSettled([
     chatGPT(chatId, message, user),
-    mixtrial(chatId, message, user)
+    mixtrial(chatId, message, user),
+    command(chatId, message, user)
 	])
 
-  console.log(reqests[0].reason)
+  console.log(reqests[2].reason)
 
-	const [ChatGPTResult, MixtrialResult] = reqests.filter(
+	const [ChatGPTResult, MixtrialResult, CommandResult] = reqests.filter(
 		(data) => (data.status = 'fulfilled')
 	) as PromiseFulfilledResult<any>[]
 
-	console.log( 'ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' +  MixtrialResult.value)
+	console.log( 'ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' +  MixtrialResult.value, '\n command' + CommandResult.value)
 
-	const promot = ` Form a single message from these texts that answers the question ${question}. Sources: 1. ${ChatGPTResult.value}; 2. ${MixtrialResult.value}. You are required to submit an answer in Russian with a maximum of 1000 characters.`
+	const promot = ` Form a single message from these texts that answers the question ${question}. Sources: 1. ${ChatGPTResult.value}; 2. ${MixtrialResult.value}; 3. ${CommandResult.value} You are required to submit an answer in Russian with a maximum of 1000 characters.`
   sleep(2000)
 	const answer =
 		(await requestFromAi(
