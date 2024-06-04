@@ -69,7 +69,7 @@ export async function mary(question: string, chatId: string, user: string) {
 
 	if (tokens >= 1000) {
 		console.log('Пришло время сжимать')
-		const history = getHistory(chatId, 'gpt-3.5-turbo-0125', getCounter(chatId, 'gpt-3.5-turbo-0125') )
+		const history = getHistory(chatId, 'mixtral-8x7b-instruct', getCounter(chatId, 'mixtral-8x7b-instruct') )
  		const compresMemory = await compresed(history)
     modelArray.forEach((model) => {
       let tokens = counterTokens(systemPromot)
