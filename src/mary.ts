@@ -16,7 +16,7 @@ import { counterTokens } from './helpers/counterTokens'
 import { sleep } from 'bun'
 
 
-const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct', 'command-r-plus']
+const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct']
 
 
 export async function mary(question: string, chatId: string, user: string) {
@@ -28,18 +28,17 @@ export async function mary(question: string, chatId: string, user: string) {
 	const reqests = await Promise.allSettled([
     chatGPT(chatId, message, user),
     mixtrial(chatId, message, user),
-    command(chatId, message, user)
 	])
 
-  console.log(reqests[2].reason)
+  console.log(reqests[1].reason)
 
 	const [ChatGPTResult, MixtrialResult, CommandResult] = reqests.filter(
 		(data) => (data.status = 'fulfilled')
 	) as PromiseFulfilledResult<any>[]
 
-	console.log( 'ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' +  MixtrialResult.value, '\n command' + CommandResult.value)
+	console.log( 'ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' +  MixtrialResult.value, '\n command') 
 
-	const promot = ` Form a single message from these texts that answers the question ${question}. Sources: 1. ${ChatGPTResult.value}; 2. ${MixtrialResult.value}; 3. ${CommandResult.value} You are required to submit an answer in Russian with a maximum of 1000 characters.`
+	const promot = ` Form a single message from these texts that answers the question ${question}. Sources: 1. ${ChatGPTResult.value}; 2. ${MixtrialResult.value}; You are required to submit an answer in Russian with a maximum of 1000 characters.`
   sleep(2000)
 	const answer =
 		(await requestFromAi(

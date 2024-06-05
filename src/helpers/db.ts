@@ -40,9 +40,11 @@ export async function insertInDateBase(
 
 export function getHistory(tableName: string, model: ModelNmaeType, counter: number): any {
 	try {
+    counter = counter == 1 ? 3 : counter * 2 + 1
+    console.log(counter)
 		const response = db
 			.query(`SELECT content, role FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC LIMIT ?2`)
-			.all(model, ((counter  * 2) + 1) )
+			.all(model, counter  )
 		return response.reverse()
 	} catch (err) {
 		console.log(err)

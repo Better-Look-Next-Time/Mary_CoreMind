@@ -12,12 +12,13 @@ interface ObjectHistory {
 	role: ModelRoleType
 }
 
-export async function compresed(history: any) {
+export async function compresed(history: ObjectHistory[]) {
 	const obj: ObjectDelimiter = {
 		user: [],
 		system: [],
 		assistant: [],
 	}
+  history = history.slice(1)
 	console.log('Итсори для сэжаиия:')
 	console.log(history)
 	history.forEach((item: ObjectHistory) => {
