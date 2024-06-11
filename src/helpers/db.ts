@@ -26,8 +26,8 @@ export async function insertInDateBase(
 	role: ModelRoleType,
 	model: ModelNmaeType,
 	userName: string,
-	counter: number, 
-  tokens :number
+	counter: number,
+	tokens: number
 ) {
 	try {
 		db.query(
@@ -40,11 +40,11 @@ export async function insertInDateBase(
 
 export function getHistory(tableName: string, model: ModelNmaeType, counter: number): any {
 	try {
-    counter = counter == 1 ? 3 : counter * 2 + 1
-    console.log(counter)
+		counter = counter == 1 ? 3 : counter * 2 + 1
+		console.log(counter)
 		const response = db
 			.query(`SELECT content, role FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC LIMIT ?2`)
-			.all(model, counter  )
+			.all(model, counter)
 		return response.reverse()
 	} catch (err) {
 		console.log(err)
@@ -56,18 +56,18 @@ export function getCounter(tableName: string, model: ModelNmaeType) {
 	console.log(counter)
 	if (counter === null) {
 		console.log('Я пустой')
-		return  1
+		return 1
 	}
 	return counter.counter
 }
 
-export function getTokens(tableName :string, model :ModelNmaeType) {
-  const tokens = db.query(`SELECT tokens FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC`).get(model)
-  if( tokens == null) {
-    console.log("Tokesn is null")
-    return 0
-  }
-  return tokens.tokens
+export function getTokens(tableName: string, model: ModelNmaeType) {
+	const tokens = db.query(`SELECT tokens FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC`).get(model)
+	if (tokens == null) {
+		console.log('Tokesn is null')
+		return 0
+	}
+	return tokens.tokens
 }
 
 export function addSystem(tableName: string, model: ModelNmaeType) {
