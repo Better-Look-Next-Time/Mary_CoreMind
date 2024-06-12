@@ -51,7 +51,7 @@ export async function mary(question: string, chatId: string, user: string) {
 				},
 			],
 			'mixtral-8x7b-instruct',
-			0.6,
+			0.5,
 			1000
 		)) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'
 
