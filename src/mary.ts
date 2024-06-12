@@ -36,7 +36,7 @@ export async function mary(question: string, chatId: string, user: string) {
 
 	console.log('ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' + MixtrialResult.value, '\n command')
 
-	const promot = `<s> [INST]${instructionsConnector}[/INST]Form a single message from the  following messages: 1. ${ChatGPTResult.value}; 2. ${MixtrialResult.value}; The message must answer the question ${question} and consist of a maximum of 1000.</s>`
+	const promot = `<s> [INST]${instructionsConnector}[/INST] Combine the following messages into a single, cohesive response: 1. ${ChatGPTResult.value} 2. ${MixtrialResult.value} The combined message must answer the question: ${question} and be no longer than 1000 characters. Ensure the response flows naturally and reads as a unified, coherent answer. </s>`
 	sleep(2000)
 	const answer =
 		(await requestFromAi(
