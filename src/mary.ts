@@ -20,7 +20,7 @@ const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruc
 
 export async function mary(question: string, chatId: string, user: string) {
 	createTable(chatId)
-	const message = `[${new Date()}] user "${user}": ${question}.`
+	const message = `[${new Date()}] {{${user}}}: "${question}"`
 
 	const reqests = await Promise.allSettled([
 		chatGPT(chatId, message, user),
@@ -36,21 +36,21 @@ export async function mary(question: string, chatId: string, user: string) {
 
 	console.log('ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' + MixtrialResult.value, '\n command')
 
-	const promot = `<s> [INST]${instructionsConnector}[/INST] Combine the following messages into a single, cohesive response: 1. ${ChatGPTResult.value} 2. ${MixtrialResult.value} The combined message must answer the question: ${question} and be no longer than 1000 characters. Ensure the response flows naturally and reads as a unified, coherent answer. </s>`
+	const promot = `Here's a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value} Make up an answer to the question ${question} based on your thoughts. The answer should be in Russian`
 	sleep(2000)
 	const answer =
 		(await requestFromAi(
 			[
 				{
 					role: 'system',
-					content: systemPromot,
+					content: character,
 				},
 				{
 					role: 'user',
 					content: promot,
 				},
 			],
-			'mixtral-8x7b-instruct',
+			'gpt-3.5-turbo-0125',
 			0.5,
 			1000
 		)) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'
@@ -68,8 +68,8 @@ export async function mary(question: string, chatId: string, user: string) {
 		const history = getHistory(chatId, 'gpt-3.5-turbo-0125', getCounter(chatId, 'gpt-3.5-turbo-0125'))
 		const compresMemory = await compresed(history)
 		modelArray.forEach((model) => {
-			let tokens = counterTokens(character)
-			insertInDateBase(chatId, character, 'system', model, 'ai', 1, tokens)
+			let tokens = counterTokens(systemPromot)
+			insertInDateBase(chatId, systemPromot, 'system', model, 'ai', 1, tokens)
 			insertInDateBase(chatId, compresMemory, 'system', model, 'ai', 1, tokens + counterTokens(compresMemory))
 		})
 	}

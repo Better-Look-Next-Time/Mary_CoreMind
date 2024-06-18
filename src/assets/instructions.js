@@ -1,1 +1,1 @@
-export const instructionsConnector = "Output in Russian language; Don't count the characters;"
+export const instructionsConnector = "You speak Russian; Don't count the characters;"
