@@ -15,6 +15,7 @@ import { compresed } from './models/openai/compresed'
 import { counterTokens } from './helpers/counterTokens'
 import { sleep } from 'bun'
 import { instructionsConnector } from './assets/instructions'
+import { blackbox } from './models/BlackBox/BlackBox'
 
 const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct', 'command-r-plus']
 
@@ -25,18 +26,18 @@ export async function mary(question: string, chatId: string, user: string) {
 	const reqests = await Promise.allSettled([
 		chatGPT(chatId, message, user),
 		mixtrial(chatId, message, user),
-		//    command(chatId, message, user)
+    blackbox(message)
 	])
 
-	console.log(reqests[1].reason)
+	console.log(reqests[2].reason)
 
-	const [ChatGPTResult, MixtrialResult, CommandResult] = reqests.filter(
+	const [ChatGPTResult, MixtrialResult, BlackBoxResult] = reqests.filter(
 		(data) => (data.status = 'fulfilled')
 	) as PromiseFulfilledResult<any>[]
 
-	console.log('ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' + MixtrialResult.value, '\n command')
+	console.log('ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' + MixtrialResult.value, '\n blackbox' + BlackBoxResult.value)
 
-	const promot = `Here's a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value} Make up an answer to the question ${question} based on your thoughts. The answer should be in Russian`
+	const promot = `Here's a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value}; ${BlackBoxResult.value} Make up an answer to the question ${question} based on your thoughts. The answer should be in Russian`
 	sleep(2000)
 	const answer =
 		(await requestFromAi(
