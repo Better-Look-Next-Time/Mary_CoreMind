@@ -20,7 +20,7 @@ const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruc
 
 export async function mary(question: string, chatId: string, user: string) {
 	createTable(chatId)
-	const message = `[${new Date()}] {{${user}}}: "${question}"`
+	const message = `[${new Date()}] What do you think about what a user named ${user} says: '${question}'`
 
 	const reqests = await Promise.allSettled([
 		chatGPT(chatId, message, user),
@@ -36,7 +36,7 @@ export async function mary(question: string, chatId: string, user: string) {
 
 	console.log('ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' + MixtrialResult.value, '\n command')
 
-	const promot = `Here's a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value} Make up an answer to the question ${question} based on your thoughts. Speak Russian`
+	const promot = `Here is a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value}. Based on your thoughts, compose a response in Russian of no more than 1000 characters that answers the user's request ${question}.`
 	sleep(2000)
 	const answer =
 		(await requestFromAi(
