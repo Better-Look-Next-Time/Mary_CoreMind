@@ -3,6 +3,8 @@ import type { ModelNmaeType, ModelRoleType } from '../models/openai/types'
 
 import { character, systemPromot } from '../assets/character'
 
+import { getTime } from './time'
+
 import { counterTokens } from './counterTokens'
 
 const db = new Database('./mary.sqlite')
@@ -32,7 +34,7 @@ export async function insertInDateBase(
 	try {
 		db.query(
 			`INSERT INTO "${tableName}" (content, role, ai, userName, date, counter, tokens) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
-		).run(message, role, model, userName, new Date().toString(), counter, tokens)
+		).run(message, role, model, userName, getTime(), counter, tokens)
 	} catch (err) {
 		console.log(err)
 	}

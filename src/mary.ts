@@ -15,12 +15,13 @@ import { compresed } from './models/openai/compresed'
 import { counterTokens } from './helpers/counterTokens'
 import { sleep } from 'bun'
 import { instructionsConnector } from './assets/instructions'
+import { getTime } from './helpers/time'
 
 const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct', 'command-r-plus']
 
 export async function mary(question: string, chatId: string, user: string) {
 	createTable(chatId)
-	const message = `[${new Date()}] What do you think about what a user named ${user} says: '${question}'`
+	const message = `[${getTime()}] What do you think about what a user named ${user} says: '${question}'`
 
 	const reqests = await Promise.allSettled([
 		chatGPT(chatId, message, user),
@@ -58,7 +59,7 @@ export async function mary(question: string, chatId: string, user: string) {
 	modelArray.forEach(async (model) => {
 		const counter = getCounter(chatId, model)
 		const tokens = getTokens(chatId, model) + counterTokens(answer)
-		insertInDateBase(chatId, answer, 'assistant', model, 'ai', counter + 1, tokens)
+		insertInDateBase(chatId, `[${getTime()}]  ${answer}`, 'assistant', model, 'ai', counter + 1, tokens)
 	})
 
 	const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')

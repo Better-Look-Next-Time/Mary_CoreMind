@@ -1,6 +1,7 @@
 import { requestFromAi } from './openai'
 import type { ModelRoleType } from './types'
 import { systemPromot } from '../../assets/character'
+import { getTime } from '../../helpers/time'
 interface ObjectDelimiter {
 	user: []
 	system: []
@@ -40,5 +41,5 @@ export async function compresed(history: ObjectHistory[]) {
 		500
 	)
 
-	return `[${new Date()}] ${answer}`
+	return `[${getTime()}] ${answer}`
 }
