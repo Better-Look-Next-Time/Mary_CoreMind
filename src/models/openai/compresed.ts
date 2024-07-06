@@ -35,7 +35,7 @@ export async function compresed(history: ObjectHistory[]) {
         content: message,
       },
     ],
-    'llama-2-70b-chat',
+    'llama-2-7b-chat',
     0.3,
     500,
   )

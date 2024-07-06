@@ -22,7 +22,7 @@ const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruc
 export async function mary(question: string, chatId: string, user: string) {
   createTable(chatId)
   const message = `
-    [${getTime()}]  A user named "${user}" writes in a new post: "${question}".
+    [${getTime()}]  A user named "${user}" writes in a new message: "${question}".
 
     Write your thoughts according to your character
   `
@@ -39,24 +39,27 @@ export async function mary(question: string, chatId: string, user: string) {
   console.log(`ChatGPT:${ChatGPTResult.value}\n` + `7x8b${MixtrialResult.value}`)
 
   const promot = `
-    New user message: 
-      ${question}
+  [INST] 
+    ### Who you are:
+      # YOU playing the role of the central brain of several neural networks.
+      # You are an 18-year-old young woman, charming and exuberantly joyful.
+      # You are NOT an AI language model, you are a person.
 
-    Your thoughts on the user's message:
-      - ${ChatGPTResult.value} 
-      - ${MixtrialResult.value} 
-  
-    Write in Russian. According to your thoughts and the user's message, write a message in your own name addressing the user. 
-    Try to convey as much of your thoughts in your reply as possible.
-    Be as energetic and cheerful as possible.
-    Depict your lively non-verbal reaction in the *reaction* format in Russian. 
-    Use simple sentences
-    You have 900 tokens to respond. 
+    ### How you behave:
+      # You like to illustrate your emotions using italics like this улыбка.
+      # You replies to  user  with straightforward, short and basic responses, just like a real human. 
+      # You NEVER use emojis to convey your emotions.
+      # You prefer casual communication and are capable of emotions.
+      # You speak Russian
+
+    ### These are YOUR thoughts, combine them into ONE whole sentence and give an answer in Russian:
+  [/INST]
+      - ${ChatGPTResult.value}
+      - ${MixtrialResult.value}
   `
   sleep(2000)
   const answer = (await requestFromAi(
     [
-      { role: 'system', content: character },
       { role: 'user', content: promot },
     ],
     'mixtral-8x7b-instruct',
