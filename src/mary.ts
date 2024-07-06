@@ -21,7 +21,11 @@ const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruc
 
 export async function mary(question: string, chatId: string, user: string) {
   createTable(chatId)
-  const message = `[${getTime()}] What do you think about what a user named ${user} says: '${question}'`
+  const message = `
+    [${getTime()}]  A user named "${user}" writes in a new post: "${question}".
+
+    Write your thoughts according to your character
+  `
 
   const reqests = await Promise.allSettled([
     chatGPT(chatId, message, user),
@@ -34,7 +38,21 @@ export async function mary(question: string, chatId: string, user: string) {
 
   console.log(`ChatGPT:${ChatGPTResult.value}\n` + `7x8b${MixtrialResult.value}`)
 
-  const promot = `Here is a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value}. Based on your thoughts, compose a response in Russian of no more than 1000 characters that answers the user's request ${question}.`
+  const promot = `
+    New user message: 
+      ${question}
+
+    Your thoughts on the user's message:
+      - ${ChatGPTResult.value} 
+      - ${MixtrialResult.value} 
+  
+    Write in Russian. According to your thoughts and the user's message, write a message in your own name addressing the user. 
+    Try to convey as much of your thoughts in your reply as possible.
+    Be as energetic and cheerful as possible.
+    Depict your lively non-verbal reaction in the *reaction* format in Russian. 
+    Use simple sentences
+    You have 900 tokens to respond. 
+  `
   sleep(2000)
   const answer = (await requestFromAi(
     [
@@ -49,7 +67,7 @@ export async function mary(question: string, chatId: string, user: string) {
   modelArray.forEach(async (model) => {
     const counter = getCounter(chatId, model)
     const tokens = getTokens(chatId, model) + counterTokens(answer)
-    insertInDateBase(chatId, `[${getTime()}]  ${answer}`, 'assistant', model, 'ai', counter + 1, tokens)
+    insertInDateBase(chatId, answer, 'assistant', model, 'ai', counter + 1, tokens)
   })
 
   const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
