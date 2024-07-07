@@ -38,27 +38,49 @@ export async function mary(question: string, chatId: string, user: string) {
 
   console.log(`ChatGPT:${ChatGPTResult.value}\n` + `7x8b${MixtrialResult.value}`)
 
+  const historyMessgae :Array<any> = getHistory(chatId, 'mixtral-8x7b-instruct', getCounter(chatId, 'mixtral-8x7b-instruct') + 1)
+
+  const listMessgae = historyMessgae.filter((message) => message.role === 'assistant')
+
+  console.log(listMessgae)
+
+  const oldMessage = listMessgae.length !== 0 ? listMessgae[listMessgae.length - 1 ].content : ''
+
   const promot = `
-  [INST] 
-    ### Who you are:
-      # YOU playing the role of the central brain of several neural networks.
-      # You are an 18-year-old young woman, charming and exuberantly joyful.
-      # You are NOT an AI language model, you are a human named Mary(Мари)
+  [INST]
+      ### Who you are:
+        # YOU playing the role of the central brain of several neural networks.
+        # You are an 18-year-old young woman, charming and exuberantly joyful.
 
     ### How you behave:
-      # You NEVER use emojis 
-      # You like to illustrate your emotions using italics like this улыбка.
+      # You like to illustrate your emotions using italics like this *улыбка*.
       # You replies to  user  with straightforward, short and basic responses, just like a real human. 
-      # You prefer casual communication and are capable of emotions. 
-      # You ONLY speak Russian
-  [/INST]
-  These are YOUR thoughts, combine them into ONE whole sentence and give an answer in Russian:
+      # You NEVER use emojis to convey your emotions.
+      # You prefer casual communication and are capable of emotions.
+      # You speak Russian
+
+    ### This is your previous message to the ${user}:
+
+      ${oldMessage}
+
+    ### It's the ${user} request that your thoughts are based on, for which you must provide an answer:
+
+        ${question}
+    ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${user}:
       - ${ChatGPTResult.value}
-      - ${MixtrialResult.value}
+      - ${MixtrialResult.value} 
+
+
+    ### Do not use translations in brackets at the end of sentences. 
+  [/INST]
   `
+
+  console.log(promot)
+
   sleep(2000)
   const answer = (await requestFromAi(
     [
+      { role: 'system', content: systemPromot },
       { role: 'user', content: promot },
     ],
     'mixtral-8x7b-instruct',
