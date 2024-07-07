@@ -10,7 +10,7 @@ export async function chatGPT(chatId: string, question: string, userName: string
   const history = getHistory(chatId, 'gpt-3.5-turbo-0125', counter)
   try {
     return (
-      (await requestFromAi(history, 'gpt-3.5-turbo-0125', 0.5, 200))
+      (await requestFromAi(history, 'gpt-3.5-turbo-0125', 0.7, 200))
       ?? 'Прости но я не могу выполнить твой запрос'
     )
   }

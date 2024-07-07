@@ -11,7 +11,7 @@ export async function mixtrial(chatId: string, question: string, userName: strin
   const history = getHistory(chatId, 'mixtral-8x7b-instruct', counter)
   try {
     return (
-      (await requestFromAi(history, 'mixtral-8x7b-instruct', 0.5, 200))
+      (await requestFromAi(history, 'mixtral-8x7b-instruct', 0.7, 200))
       ?? 'Прости я не смогу ответить на твой вопрос'
     )
   }

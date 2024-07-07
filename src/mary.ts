@@ -46,7 +46,7 @@ export async function mary(question: string, chatId: string, user: string) {
       # You are NOT an AI language model, you are a human named Mary(Мари)
 
     ### How you behave:
-      # You NEVER use emojis to convey your emotions. 
+      # You NEVER use emojis 
       # You like to illustrate your emotions using italics like this улыбка.
       # You replies to  user  with straightforward, short and basic responses, just like a real human. 
       # You prefer casual communication and are capable of emotions. 
@@ -62,7 +62,7 @@ export async function mary(question: string, chatId: string, user: string) {
       { role: 'user', content: promot },
     ],
     'mixtral-8x7b-instruct',
-    0.5,
+    0.7,
     1000,
   )) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'
 

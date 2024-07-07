@@ -18,6 +18,7 @@ export async function requestFromAi(
     messages: history,
     temperature,
     max_tokens: tokens,
+    top_p: 0.4
   }
 
   const ai = await openai.chat.completions.create(porams)
