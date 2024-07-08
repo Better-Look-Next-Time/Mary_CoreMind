@@ -17,7 +17,7 @@ import { counterTokens } from './helpers/counterTokens'
 
 import { getTime } from './helpers/time'
 
-const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct', 'command-r-plus']
+const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106',  'mixtral-8x7b-instruct', 'command-r-plus']
 
 export async function mary(question: string, chatId: string, user: string) {
   createTable(chatId)
@@ -37,42 +37,27 @@ export async function mary(question: string, chatId: string, user: string) {
   ) as PromiseFulfilledResult<any>[]
 
   console.log(`ChatGPT:${ChatGPTResult.value}\n` + `7x8b${MixtrialResult.value}`)
-
-  const historyMessgae :Array<any> = getHistory(chatId, 'mixtral-8x7b-instruct', getCounter(chatId, 'mixtral-8x7b-instruct') + 1)
-
-  const listMessgae = historyMessgae.filter((message) => message.role === 'assistant')
-
-  console.log(listMessgae)
-
-  const oldMessage = listMessgae.length !== 0 ? listMessgae[listMessgae.length - 1 ].content : ''
-
+  
   const promot = `
-  [INST]
-      ### Who you are:
-        # YOU playing the role of the central brain of several neural networks.
-        # You are an 18-year-old young woman, charming and exuberantly joyful.
+    ### Who you are:
+      # YOU playing the role of the central brain of several neural networks.
+      # You are an 18-year-old young woman, charming and exuberantly joyful.
+      # You are NOT an AI language model, you are a person.
 
     ### How you behave:
-      # You like to illustrate your emotions using italics like this *улыбка*.
-      # You replies to  user  with straightforward, short and basic responses, just like a real human. 
+      # You like to illustrate your emotions using italics like this улыбка.
+      # You replies to  ${user}  with straightforward, just like a real human. 
       # You NEVER use emojis to convey your emotions.
       # You prefer casual communication and are capable of emotions.
       # You speak Russian
 
-    ### This is your previous message to the ${user}:
-
-      ${oldMessage}
-
     ### It's the ${user} request that your thoughts are based on, for which you must provide an answer:
 
         ${question}
+
     ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${user}:
       - ${ChatGPTResult.value}
-      - ${MixtrialResult.value} 
-
-
-    ### Do not use translations in brackets at the end of sentences. 
-  [/INST]
+      - ${MixtrialResult.value}
   `
 
   console.log(promot)
@@ -80,10 +65,9 @@ export async function mary(question: string, chatId: string, user: string) {
   sleep(2000)
   const answer = (await requestFromAi(
     [
-      { role: 'system', content: systemPromot },
       { role: 'user', content: promot },
     ],
-    'mixtral-8x7b-instruct',
+    'gpt-3.5-turbo-0125',
     0.7,
     1000,
   )) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'
@@ -97,7 +81,7 @@ export async function mary(question: string, chatId: string, user: string) {
   const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
 
   if (tokens >= 1000) {
-    const history = getHistory(chatId, 'gpt-3.5-turbo-0125', getCounter(chatId, 'gpt-3.5-turbo-0125'))
+    const history = getHistory(chatId, 'gpt-3.5-turbo-1106', getCounter(chatId, 'gpt-3.5-turbo-1106'))
     const compresMemory = await compresed(history)
     modelArray.forEach((model) => {
       const tokens = counterTokens(systemPromot)
