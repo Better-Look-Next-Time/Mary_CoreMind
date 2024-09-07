@@ -8,16 +8,16 @@
     "lint:fix": "eslint . --fix"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
-    "openai": "^4.40.0"
+    "discord.js": "^14.16.1",
+    "openai": "^4.58.1"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.21.2",
-    "@types/bun": "latest",
-    "eslint": "^8.57.0",
-    "prettier": "^3.2.5"
+    "@antfu/eslint-config": "^3.3.2",
+    "@types/bun": "^1.1.8",
+    "eslint": "^9.10.0",
+    "prettier": "^3.3.3"
   }
 }
