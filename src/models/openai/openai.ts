@@ -1,27 +1,58 @@
 import { env } from 'bun'
 import OpenAI from 'openai'
-import type { ModelMaxTokensType, ModelNameType, ModelTemperatureType } from './types'
+import { counterTokens } from '../../helpers/counterTokens'
+import { addSystem, getCounter, getHistory, getTokens, insertInDateBase } from './../../helpers/db.ts'
+import type { ModelMaxTokensType, ModelNameType, ModelRoleType, ModelTemperatureType } from './types'
 
-const openai = new OpenAI({
-  baseURL: env.OPENAI_BASE_URL,
-  apiKey: env.NAGA_KEY,
-})
+export class OpenAIModel {
+  private chatId: string | null
+  private modelName: ModelNameType
+  private openai: OpenAI
+  private temperature: ModelTemperatureType
+  private max_tokens: ModelMaxTokensType
 
-export async function requestFromAi(
-  history: OpenAI.Chat.ChatCompletionMessageParam[],
-  model: ModelNameType,
-  temperature: ModelTemperatureType,
-  tokens: ModelMaxTokensType,
-): Promise<string | null> {
-  const porams: OpenAI.Chat.CompletionCreateParamsNonStreaming = {
-    model,
-    messages: history,
-    temperature,
-    max_tokens: tokens,
-    top_p: 1
+  constructor(chatId: any, modelName: ModelNameType, temperature: ModelTemperatureType, max_tokens: ModelMaxTokensType) {
+    this.openai = new OpenAI({
+      baseURL: env.NAGA_BASE_URL,
+      apiKey: env.NAGA_KEY,
+    })
+    this.chatId = chatId
+    this.modelName = modelName
+    this.temperature = temperature
+    this.max_tokens = max_tokens
   }
 
-  const ai = await openai.chat.completions.create(porams)
-  const answer = ai.choices[0]?.message?.content
-  return answer
+  private GetTokens(question: string) {
+    if (this.chatId) {
+      return getTokens(this.chatId, this.modelName) + counterTokens(question)
+    }
+  }
+
+  async Request(histiry: OpenAI.Chat.ChatCompletionMessageParam[]) {
+    const completion = await this.openai.chat.completions.create({
+      messages: histiry,
+      model: this.modelName,
+      temperature: this.temperature,
+      max_tokens: this.max_tokens,
+      top_p: 1,
+    })
+    return completion.choices[0].message.content
+  }
+
+  async ProcessResponse(question: string, userName: string) {
+    if (this.chatId) {
+      addSystem(this.chatId, this.modelName)
+      insertInDateBase(this.chatId, question, 'user', this.modelName, userName, this.GetCounter, this.GetTokens(question))
+      const histiry = getHistory(this.chatId, this.modelName, this.GetCounter)
+      const response = await this.Request(histiry)
+      console.log(response)
+      return response
+    }
+  }
+
+  private get GetCounter() {
+    if (this.chatId) {
+      return getCounter(this.chatId, this.modelName)
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { systemPromot } from '../../assets/character'
 import { getTime } from '../../helpers/time'
-import { requestFromAi } from './openai'
+import { OpenAIModel } from './openai'
 import type { ModelRoleType } from './types'
 
 interface ObjectDelimiter {
@@ -28,17 +28,8 @@ export async function compresed(history: ObjectHistory[]) {
 
   const message = `Recap the key message of this communication by combining the following messages into one: from users ${obj.user}, and from Mary ${obj.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
 
-  const answer = await requestFromAi(
-    [
-      {
-        role: 'user',
-        content: message,
-      },
-    ],
-    'llama-2-7b-chat',
-    0.3,
-    500,
-  )
+  const llama = new OpenAIModel(null, 'llama-2-7b-chat', 0.3, 500)
+  const answer = await llama.Request([{ role: 'user', content: message }])
 
   return `[${getTime()}] ${answer}`
 }

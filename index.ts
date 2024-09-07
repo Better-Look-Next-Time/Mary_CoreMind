@@ -16,7 +16,8 @@ Bot.on(Events.ClientReady, async () => {
 })
 
 Bot.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot) return
+  if (message.author.bot)
+    return
   const MessageContent: string = message.content.toLowerCase()
   if (trigerWords.some(word => MessageContent.includes(word))) {
     await message.channel.sendTyping()

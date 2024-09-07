@@ -1,11 +1,11 @@
 import { Database } from 'bun:sqlite'
-import type { ModelNameType, ModelRoleType } from '../models/openai/types'
-
 import { character, systemPromot } from '../assets/character'
+
+import { counterTokens } from './counterTokens'
 
 import { getTime } from './time'
 
-import { counterTokens } from './counterTokens'
+import type { ModelNameType, ModelRoleType } from '../models/openai/types'
 
 const db = new Database('./mary.sqlite')
 

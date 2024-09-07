@@ -1,23 +1,20 @@
 // OpenAI
 import { sleep } from 'bun'
-import { requestFromAi } from './models/openai/openai'
-
-import { chatGPT } from './models/openai/chatGPT'
-import { mixtrial } from './models/openai/7x8b'
-
-// DB
-import { createTable, getCounter, getHistory, getTokens, insertInDateBase } from './helpers/db'
-
 // assest
 import { character, systemPromot } from './assets/character'
 
-import type { ModelNameType } from './models/openai/types'
-import { compresed } from './models/openai/compresed'
 import { counterTokens } from './helpers/counterTokens'
 
+// DB
+import { createTable, getCounter, getHistory, getTokens, insertInDateBase } from './helpers/db'
 import { getTime } from './helpers/time'
+import { compresed } from './models/openai/compresed'
 
-const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106',  'mixtral-8x7b-instruct', 'command-r-plus']
+import { OpenAIModel } from './models/openai/openai'
+
+import type { ModelNameType } from './models/openai/types'
+
+const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct', 'command-r-plus']
 
 export async function mary(question: string, chatId: string, user: string) {
   createTable(chatId)
@@ -27,9 +24,12 @@ export async function mary(question: string, chatId: string, user: string) {
       # question: "${question}".
   `
 
+  const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
+  const chatGPT_0125 = new OpenAIModel(null, 'gpt-3.5-turbo-0125', 0.7, 1000)
+  const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const reqests = await Promise.allSettled([
-    chatGPT(chatId, message, user),
-    mixtrial(chatId, message, user),
+    chatGPT_1106.ProcessResponse(message, user),
+    mixtrial.ProcessResponse(message, user),
   ])
 
   const [ChatGPTResult, MixtrialResult] = reqests.filter(
@@ -37,7 +37,7 @@ export async function mary(question: string, chatId: string, user: string) {
   ) as PromiseFulfilledResult<any>[]
 
   console.log(`ChatGPT:${ChatGPTResult.value}\n` + `7x8b${MixtrialResult.value}`)
-  
+
   const promot = `
     ### Who you are:
       # YOU playing the role of the central brain of several neural networks.
@@ -63,14 +63,7 @@ export async function mary(question: string, chatId: string, user: string) {
   console.log(promot)
 
   sleep(2000)
-  const answer = (await requestFromAi(
-    [
-      { role: 'user', content: promot },
-    ],
-    'gpt-3.5-turbo-0125',
-    0.7,
-    1000,
-  )) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'
+  const answer = await chatGPT_0125.Request([{ role: 'user', content: promot }]) ?? 'Прости произошли проблемы'
 
   modelArray.forEach(async (model) => {
     const counter = getCounter(chatId, model)
