@@ -36,8 +36,6 @@ export async function mary(question: string, chatId: string, user: string) {
     data => (data.status = 'fulfilled'),
   ) as PromiseFulfilledResult<any>[]
 
-  console.log(`ChatGPT:${ChatGPTResult.value}\n` + `7x8b${MixtrialResult.value}`)
-
   const promot = `
     ### Who you are:
       # YOU playing the role of the central brain of several neural networks.
