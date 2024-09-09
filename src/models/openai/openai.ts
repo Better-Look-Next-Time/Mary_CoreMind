@@ -45,10 +45,11 @@ export class OpenAIModel {
     }
   }
 
-  async ProcessResponse(question: string, userName: string) {
+  async ProcessResponse(question: string, system: string, userName: string) {
     if (this.chatId) {
-      addSystem(this.chatId, this.modelName)
-      insertInDateBase(this.chatId, question, 'user', this.modelName, userName, this.GetCounter, this.GetTokens(question))
+      const tokens = this.GetTokens(question)
+      insertInDateBase(this.chatId, system, 'system', this.modelName, userName, this.GetCounter, tokens)
+      insertInDateBase(this.chatId, question, 'user', this.modelName, userName, this.GetCounter, tokens) // question for User
       const history = getHistory(this.chatId, this.modelName, this.GetCounter)
       const response = await this.Request(history)
       console.log(response)

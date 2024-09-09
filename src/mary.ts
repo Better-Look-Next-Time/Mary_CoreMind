@@ -28,8 +28,8 @@ export async function mary(question: string, chatId: string, user: string) {
   const chatGPT_0125 = new OpenAIModel(null, 'gpt-3.5-turbo-0125', 0.7, 1000)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const reqests = await Promise.allSettled([
-    chatGPT_1106.ProcessResponse(message, user),
-    mixtrial.ProcessResponse(message, user),
+    chatGPT_1106.ProcessResponse(message, systemPromot, user),
+    mixtrial.ProcessResponse(message, systemPromot, user),
   ])
 
   const [ChatGPTResult, MixtrialResult] = reqests.filter(
