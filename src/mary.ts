@@ -8,7 +8,7 @@ import { counterTokens } from './helpers/counterTokens'
 // DB
 import { createTable, getCounter, getHistory, getTokens, insertInDateBase } from './helpers/db'
 import { getTime } from './helpers/time'
-import { compresed } from './models/openai/compresed'
+import { memoryCompression } from './models/openai/compresed'
 
 import { OpenAIModel } from './models/openai/openai'
 
@@ -65,6 +65,7 @@ export async function mary(question: string, chatId: string, user: string) {
 
   modelArray.forEach(async (model) => {
     const counter = getCounter(chatId, model)
+    console.log(counter)
     const tokens = getTokens(chatId, model) + counterTokens(answer)
     insertInDateBase(chatId, answer, 'assistant', model, 'ai', counter + 1, tokens)
   })
@@ -73,7 +74,7 @@ export async function mary(question: string, chatId: string, user: string) {
 
   if (tokens >= 1000) {
     const history = getHistory(chatId, 'gpt-3.5-turbo-1106', getCounter(chatId, 'gpt-3.5-turbo-1106'))
-    const compresMemory = await compresed(history)
+    const compresMemory = await memoryCompression(history)
     modelArray.forEach((model) => {
       const tokens = counterTokens(systemPromot)
       insertInDateBase(chatId, systemPromot, 'system', model, 'ai', 1, tokens)

@@ -29,20 +29,14 @@ export class OpenAIModel {
   }
 
   async Request(histiry: OpenAI.Chat.ChatCompletionMessageParam[]) {
-    try {
-      const completion = await this.openai.chat.completions.create({
-        messages: histiry,
-        model: this.modelName,
-        temperature: this.temperature,
-        max_tokens: this.max_tokens,
-        top_p: 1,
-      })
-      return completion.choices[0].message.content
-    }
-    catch (error) {
-      console.log(error)
-      throw new Error('Прости, мою сеть взламывают. Отвечу чуть позже.')
-    }
+    const completion = await this.openai.chat.completions.create({
+      messages: histiry,
+      model: this.modelName,
+      temperature: this.temperature,
+      max_tokens: this.max_tokens,
+      top_p: 1,
+    })
+    return completion.choices[0].message.content ?? 'Прости, мою сеть взламывают. Отвечу чуть позже.'
   }
 
   async ProcessResponse(question: string, system: string, userName: string) {

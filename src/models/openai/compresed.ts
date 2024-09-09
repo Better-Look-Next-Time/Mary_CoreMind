@@ -1,35 +1,26 @@
-import { systemPromot } from '../../assets/character'
-import { getTime } from '../../helpers/time'
+import type { OpenAI } from 'openai'
 import { OpenAIModel } from './openai'
-import type { ModelRoleType } from './types'
 
-interface ObjectDelimiter {
-  user: []
-  system: []
-  assistant: []
+const Llama = new OpenAIModel(null, 'llama-2-7b-chat', 0.3, 500)
+
+interface MessageLists {
+  user: string[]
+  assistant: string[]
 }
 
-interface ObjectHistory {
-  content: string
-  role: ModelRoleType
-}
-
-export async function compresed(history: ObjectHistory[]) {
-  const obj: ObjectDelimiter = {
+export async function memoryCompression(history: OpenAI.Chat.ChatCompletionMessageParam[]) {
+  const messageLists: MessageLists = {
     user: [],
-    system: [],
     assistant: [],
   }
-  history = history.slice(1)
-  history.forEach((item: ObjectHistory) => {
-    const mas = obj[item.role]
-    mas.push(item.content)
+  const filteredHistory = history.filter(message => message.role === 'assistant' || message.role === 'user')
+  console.log(filteredHistory)
+  filteredHistory.forEach((message) => {
+    if (message.role === 'assistant' || message.role === 'user') {
+      messageLists[message.role].push(message.content as string)
+    }
   })
-
-  const message = `Recap the key message of this communication by combining the following messages into one: from users ${obj.user}, and from Mary ${obj.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
-
-  const llama = new OpenAIModel(null, 'llama-2-7b-chat', 0.3, 500)
-  const answer = await llama.Request([{ role: 'user', content: message }])
-
-  return `[${getTime()}] ${answer}`
+  console.log(messageLists)
+  const promot = `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
+  return await Llama.Request([{ role: 'user', content: promot }])
 }
