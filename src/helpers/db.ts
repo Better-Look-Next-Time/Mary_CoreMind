@@ -1,75 +1,98 @@
 import { Database } from 'bun:sqlite'
-import { character, systemPromot } from '../assets/character'
+import type OpenAI from 'openai'
+import type { ModelNameType, ModelRoleType } from './../models/openai/types'
 
-import { counterTokens } from './counterTokens'
+interface CounterResult {
+  counter: number | null
+}
 
-import { getTime } from './time'
-
-import type { ModelNameType, ModelRoleType } from '../models/openai/types'
+interface TokenResult {
+  tokens: number | null
+}
 
 const db = new Database('./mary.sqlite')
 
-export function createTable(tableName: string) {
-  const tables = db.query(`SELECT name FROM sqlite_master WHERE type='table';`).all()
-  if (tables.some((table: any) => table.name === tableName)) {
-    console.log('Я уже есть')
-  }
-  else {
-    db.query(`CREATE TABLE "${tableName}" ("id" INTEGER PRIMARY KEY AUTOINCREMENT ,"content" TEXT, "role" TEXT, "ai" TEXT, "userName" TEXT, "date" TEXT,  "counter" INTEGER, "tokens" INTEGER)`).run()
-    console.log('Я создал таблицу')
-  }
-}
+const historyError: OpenAI.Chat.ChatCompletionMessageParam[] = [{ content: 'Произошла ошибка', role: 'assistant' }]
 
-export async function insertInDateBase(
-  tableName: string,
-  message: string,
-  role: ModelRoleType,
-  model: ModelNameType,
-  userName: string,
-  counter: number,
-  tokens: number,
-) {
-  try {
+export function createTables() {
+  const tables = db.query(`SELECT name FROM sqlite_master WHERE type='table'`).all()
+  if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message')) {
     db.query(
-      `INSERT INTO "${tableName}" (content, role, ai, userName, date, counter, tokens) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
-    ).run(message, role, model, userName, getTime(), counter, tokens)
-  }
-  catch (err) {
-    console.log(err)
+      `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model", "tokens" INTEGER, "counter" INTEGER  )`,
+    ).run()
+    db.query(
+      `CREATE TABLE "users_message" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "chat_id" TEXT, "user_id" TEXT, "type" TEXT,  "content" TEXT, "counter" INTEGER )`,
+    ).run()
   }
 }
 
-export function getHistory(tableName: string, model: ModelNameType, counter: number): any {
+export function insertChatMessages(chat_id: string, content: string, role: ModelRoleType, model: ModelNameType, tokens: number, counter: number) {
   try {
-    counter = counter === 1 ? 3 : counter * 2 + 1
-    const response = db
-      .query(`SELECT content, role FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC LIMIT ?2`)
-      .all(model, counter)
-    return response.reverse()
+    db.query(`INSERT INTO "chat_messages" (chat_id, content, role, model, tokens, counter) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`).run(chat_id, content, role, model, tokens, counter)
   }
-  catch (err) {
-    console.log(err)
+  catch (error) {
+    console.log(error)
   }
 }
 
-export function getCounter(tableName: string, model: ModelNameType) {
-  const counter = db.query(`SELECT counter FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC `).get(model)
-  if (counter === null) {
+export function insertUsersMessage(chat_id: string, user_id: string, type: string, content: string, counter: number) {
+  try {
+    db.query(`INSERT INTO "users_message" ( chat_id, user_id, type, content, counter ) VALUES (?1, ?2, ?3 ?4, ?5) `).run(chat_id, user_id, type, content, counter)
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
+export function getHistoryChat(chat_id: string, model: ModelNameType, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
+  try {
+    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC LIMIT ?3`).all(chat_id, model, counter === 1 ? 3 : counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
+    return history.reverse()
+  }
+  catch (error) {
+    console.log(error)
+    return historyError
+  }
+}
+
+export function getHistoryUser(chat_id: string, user_id: string, counter: number) {
+  try {
+    return db.query(`SELECT content FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 ORDER BY id DESC LIMIT ?3`).all(chat_id, user_id, counter)
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
+export function getCounterChat(chat_id: string, model: ModelNameType) {
+  try {
+    const counter = db.query(`SELECT counter FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC `).get(chat_id, model) as CounterResult
+    return counter?.counter ?? 1
+  }
+  catch (error) {
+    console.log(error)
     return 1
   }
-  return counter.counter
 }
 
-export function getTokens(tableName: string, model: ModelNameType) {
-  const tokens = db.query(`SELECT tokens FROM "${tableName}" WHERE ai = ?1 ORDER BY id DESC`).get(model)
-  if (tokens == null) {
-    return 0
+export function getCounterUser(chat_id: string, user_id: string) {
+  try {
+    const counter = db.query(`SELECT counter FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 ORDER BY id DESC `).get(chat_id, user_id) as CounterResult
+    return counter?.counter ?? 1
   }
-  return tokens.tokens
+  catch (error) {
+    console.log(error)
+    return 1
+  }
 }
 
-export function addSystem(tableName: string, model: ModelNameType) {
-  if (db.query(`SELECT * FROM "${tableName}" WHERE ai=?1`).get(model) == null) {
-    insertInDateBase(tableName, systemPromot, 'system', model, 'ai', 1, counterTokens(systemPromot))
+export function getTokens(chat_id: string, model: ModelNameType) {
+  try {
+    const tokens = db.query(`SELECT tokens FROM 'chat_messages' WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC`).get(chat_id, model) as TokenResult
+    return tokens?.tokens ?? 0
+  }
+  catch (error) {
+    console.log(error)
+    return 0
   }
 }

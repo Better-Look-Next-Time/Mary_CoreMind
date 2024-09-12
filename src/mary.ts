@@ -6,7 +6,7 @@ import { character, systemPromot } from './assets/character'
 import { counterTokens } from './helpers/counterTokens'
 
 // DB
-import { createTable, getCounter, getHistory, getTokens, insertInDateBase } from './helpers/db'
+import { createTables, getCounterChat, getHistoryChat, getTokens, insertChatMessages } from './helpers/db'
 import { getTime } from './helpers/time'
 import { memoryCompression } from './models/openai/compresed'
 
@@ -17,7 +17,7 @@ import type { ModelNameType } from './models/openai/types'
 const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct', 'command-r-plus']
 
 export async function mary(question: string, chatId: string, user: string) {
-  createTable(chatId)
+  createTables()
   const message = `
   ### This is a "${user}" response, compose your thoughts:
       # datatime: [${getTime()}]
@@ -25,11 +25,11 @@ export async function mary(question: string, chatId: string, user: string) {
   `
 
   const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
-  const chatGPT_0125 = new OpenAIModel(null, 'gpt-3.5-turbo-0125', 0.7, 1000)
+  const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-0125', 0.7, 1000)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const reqests = await Promise.allSettled([
-    chatGPT_1106.ProcessResponse(message, systemPromot, user),
-    mixtrial.ProcessResponse(message, systemPromot, user),
+    chatGPT_1106.ProcessResponse(message, systemPromot),
+    mixtrial.ProcessResponse(message, systemPromot),
   ])
 
   const [ChatGPTResult, MixtrialResult] = reqests.filter(
@@ -64,21 +64,20 @@ export async function mary(question: string, chatId: string, user: string) {
   const answer = await chatGPT_0125.Request([{ role: 'user', content: promot }]) ?? 'Прости произошли проблемы'
 
   modelArray.forEach(async (model) => {
-    const counter = getCounter(chatId, model)
+    const counter = getCounterChat(chatId, model)
     console.log(counter)
     const tokens = getTokens(chatId, model) + counterTokens(answer)
-    insertInDateBase(chatId, answer, 'assistant', model, 'ai', counter + 1, tokens)
+    insertChatMessages(chatId, answer, 'assistant', model, tokens, counter + 1)
   })
 
   const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
 
   if (tokens >= 1000) {
-    const history = getHistory(chatId, 'gpt-3.5-turbo-1106', getCounter(chatId, 'gpt-3.5-turbo-1106'))
+    const history = getHistoryChat(chatId, 'gpt-3.5-turbo-1106', getCounterChat(chatId, 'gpt-3.5-turbo-1106'))
     const compresMemory = await memoryCompression(history)
     modelArray.forEach((model) => {
       const tokens = counterTokens(systemPromot)
-      insertInDateBase(chatId, systemPromot, 'system', model, 'ai', 1, tokens)
-      insertInDateBase(chatId, compresMemory, 'system', model, 'ai', 1, tokens + counterTokens(compresMemory))
+      insertChatMessages(chatId, compresMemory, 'system', model, tokens + counterTokens(compresMemory), 1)
     })
   }
 

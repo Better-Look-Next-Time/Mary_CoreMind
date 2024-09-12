@@ -1,7 +1,7 @@
 import type { OpenAI } from 'openai'
 import { OpenAIModel } from './openai'
 
-const Llama = new OpenAIModel(null, 'llama-2-7b-chat', 0.3, 500)
+const Llama = new OpenAIModel('', 'llama-2-7b-chat', 0.3, 500)
 
 interface MessageLists {
   user: string[]

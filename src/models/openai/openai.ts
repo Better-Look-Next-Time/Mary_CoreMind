@@ -1,17 +1,17 @@
 import { env } from 'bun'
 import OpenAI from 'openai'
 import { counterTokens } from '../../helpers/counterTokens'
-import { addSystem, getCounter, getHistory, getTokens, insertInDateBase } from './../../helpers/db.ts'
+import { getCounterChat, getHistoryChat, getTokens, insertChatMessages } from '../../helpers/db'
 import type { ModelMaxTokensType, ModelNameType, ModelTemperatureType } from './types'
 
 export class OpenAIModel {
-  private chatId: string | null
+  private chatId: string
   private modelName: ModelNameType
   private openai: OpenAI
   private temperature: ModelTemperatureType
   private max_tokens: ModelMaxTokensType
 
-  constructor(chatId: any, modelName: ModelNameType, temperature: ModelTemperatureType, max_tokens: ModelMaxTokensType) {
+  constructor(chatId: string, modelName: ModelNameType, temperature: ModelTemperatureType, max_tokens: ModelMaxTokensType) {
     this.openai = new OpenAI({
       baseURL: env.NAGA_BASE_URL,
       apiKey: env.NAGA_KEY,
@@ -23,9 +23,7 @@ export class OpenAIModel {
   }
 
   private GetTokens(question: string) {
-    if (this.chatId) {
-      return getTokens(this.chatId, this.modelName) + counterTokens(question)
-    }
+    return getTokens(this.chatId, this.modelName) + counterTokens(question)
   }
 
   async Request(histiry: OpenAI.Chat.ChatCompletionMessageParam[]) {
@@ -39,21 +37,18 @@ export class OpenAIModel {
     return completion.choices[0].message.content ?? 'Прости, мою сеть взламывают. Отвечу чуть позже.'
   }
 
-  async ProcessResponse(question: string, system: string, userName: string) {
-    if (this.chatId) {
-      const tokens = this.GetTokens(question)
-      insertInDateBase(this.chatId, system, 'system', this.modelName, userName, this.GetCounter, tokens)
-      insertInDateBase(this.chatId, question, 'user', this.modelName, userName, this.GetCounter, tokens) // question for User
-      const history = getHistory(this.chatId, this.modelName, this.GetCounter)
-      const response = await this.Request(history)
-      console.log(response)
-      return response
-    }
+  async ProcessResponse(question: string, system: string) {
+    const tokens = this.GetTokens(question)
+    insertChatMessages(this.chatId, system, 'system', this.modelName, tokens, this.GetCounter)
+    insertChatMessages(this.chatId, question, 'user', this.modelName, tokens, this.GetCounter) // question for User
+    const history = getHistoryChat(this.chatId, this.modelName, this.GetCounter)
+    console.log(history)
+    const response = await this.Request(history)
+    console.log(response)
+    return response
   }
 
   private get GetCounter() {
-    if (this.chatId) {
-      return getCounter(this.chatId, this.modelName)
-    }
+    return getCounterChat(this.chatId, this.modelName)
   }
 }
