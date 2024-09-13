@@ -10,6 +10,12 @@ interface TokenResult {
   tokens: number | null
 }
 
+interface UserCharacterResult {
+  userCharacter: string | null
+}
+
+type UserMessageType = 'message' | 'character'
+
 const db = new Database('./mary.sqlite')
 
 const historyError: OpenAI.Chat.ChatCompletionMessageParam[] = [{ content: 'Произошла ошибка', role: 'assistant' }]
@@ -35,7 +41,7 @@ export function insertChatMessages(chat_id: string, content: string, role: Model
   }
 }
 
-export function insertUsersMessage(chat_id: string, user_id: string, type: string, content: string, counter: number) {
+export function insertUsersMessage(chat_id: string, user_id: string, type: UserMessageType, content: string, counter: number) {
   try {
     db.query(`INSERT INTO "users_message" ( chat_id, user_id, type, content, counter ) VALUES (?1, ?2, ?3 ?4, ?5) `).run(chat_id, user_id, type, content, counter)
   }
@@ -57,7 +63,7 @@ export function getHistoryChat(chat_id: string, model: ModelNameType, counter: n
 
 export function getHistoryUser(chat_id: string, user_id: string, counter: number) {
   try {
-    return db.query(`SELECT content FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 ORDER BY id DESC LIMIT ?3`).all(chat_id, user_id, counter)
+    return db.query(`SELECT content FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 AND type = 'message' ORDER BY id DESC LIMIT ?3`).all(chat_id, user_id, counter)
   }
   catch (error) {
     console.log(error)
@@ -94,5 +100,16 @@ export function getTokens(chat_id: string, model: ModelNameType) {
   catch (error) {
     console.log(error)
     return 0
+  }
+}
+
+export function getUserCharacter(chat_id: string, user_id: string) {
+  try {
+    const userCharacter = db.query(`SELECT content FROM users_message WHERE chat_id = ?1 AND user_id = ?2 ORDER BY id DESC LIMIT 1`).get(chat_id, user_id) as UserCharacterResult
+    return userCharacter.userCharacter ?? 'О пользователе нечего сказть'
+  }
+  catch (error) {
+    console.log(error)
+    return 'О пользователе нечего сказть'
   }
 }
