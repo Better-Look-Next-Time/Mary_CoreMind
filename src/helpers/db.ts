@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 import type OpenAI from 'openai'
+import type { HistoryUser } from '../interface/HistoryUserInterface'
 import type { ModelNameType, ModelRoleType } from './../models/openai/types'
 
 interface CounterResult {
@@ -43,7 +44,7 @@ export function insertChatMessages(chat_id: string, content: string, role: Model
 
 export function insertUsersMessage(chat_id: string, user_id: string, type: UserMessageType, content: string, counter: number) {
   try {
-    db.query(`INSERT INTO "users_message" ( chat_id, user_id, type, content, counter ) VALUES (?1, ?2, ?3 ?4, ?5) `).run(chat_id, user_id, type, content, counter)
+    db.query(`INSERT INTO "users_message" ( chat_id, user_id, type, content, counter ) VALUES (?1, ?2, ?3, ?4, ?5) `).run(chat_id, user_id, type, content, counter)
   }
   catch (error) {
     console.log(error)
@@ -61,12 +62,13 @@ export function getHistoryChat(chat_id: string, model: ModelNameType, counter: n
   }
 }
 
-export function getHistoryUser(chat_id: string, user_id: string, counter: number) {
+export function getHistoryUser(chat_id: string, user_id: string, counter: number): HistoryUser[] {
   try {
-    return db.query(`SELECT content FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 AND type = 'message' ORDER BY id DESC LIMIT ?3`).all(chat_id, user_id, counter)
+    return db.query(`SELECT content FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 AND type = 'message' ORDER BY id DESC LIMIT ?3`).all(chat_id, user_id, counter) as HistoryUser[]
   }
   catch (error) {
     console.log(error)
+    return [{ content: 'Error' }]
   }
 }
 

@@ -6,20 +6,20 @@ import { character, systemPromot } from './assets/character'
 import { counterTokens } from './helpers/counterTokens'
 
 // DB
-import { createTables, getCounterChat, getHistoryChat, getTokens, insertChatMessages } from './helpers/db'
+import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getTokens, insertChatMessages, insertUsersMessage } from './helpers/db'
 import { getTime } from './helpers/time'
+
 import { memoryCompression } from './models/openai/compresed'
 
 import { OpenAIModel } from './models/openai/openai'
-
 import type { ModelNameType } from './models/openai/types'
 
 const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct', 'command-r-plus']
 
-export async function mary(question: string, chatId: string, user: string) {
+export async function mary(question: string, chatId: string, userName: string, userId: string) {
   createTables()
   const message = `
-  ### This is a "${user}" response, compose your thoughts:
+  ### This is a "${userName}" response, compose your thoughts:
       # datatime: [${getTime()}]
       # question: "${question}".
   `
@@ -44,16 +44,16 @@ export async function mary(question: string, chatId: string, user: string) {
 
     ### How you behave:
       # You like to illustrate your emotions using italics like this улыбка.
-      # You replies to  ${user}  with straightforward, just like a real human. 
+      # You replies to  ${userName}  with straightforward, just like a real human. 
       # You NEVER use emojis to convey your emotions.
       # You prefer casual communication and are capable of emotions.
       # You speak Russian
 
-    ### It's the ${user} request that your thoughts are based on, for which you must provide an answer:
+    ### It's the ${userName} request that your thoughts are based on, for which you must provide an answer:
 
         ${question}
 
-    ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${user}:
+    ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${userName}:
       - ${ChatGPTResult.value}
       - ${MixtrialResult.value}
   `
@@ -70,14 +70,18 @@ export async function mary(question: string, chatId: string, user: string) {
     insertChatMessages(chatId, answer, 'assistant', model, tokens, counter + 1)
   })
 
+  insertUsersMessage(chatId, userId, 'message', question, getCounterUser(chatId, userId) + 1)
+
   const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
 
   if (tokens >= 1000) {
-    const history = getHistoryChat(chatId, 'gpt-3.5-turbo-1106', getCounterChat(chatId, 'gpt-3.5-turbo-1106'))
-    const compresMemory = await memoryCompression(history)
+    const historyChat = getHistoryChat(chatId, 'gpt-3.5-turbo-1106', getCounterChat(chatId, 'gpt-3.5-turbo-1106'))
+    const historyUser = getHistoryUser(chatId, userId, getCounterUser(chatId, userId))
+    const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
+    insertUsersMessage(chatId, userId, 'character', userCharacter, 1)
     modelArray.forEach((model) => {
       const tokens = counterTokens(systemPromot)
-      insertChatMessages(chatId, compresMemory, 'system', model, tokens + counterTokens(compresMemory), 1)
+      insertChatMessages(chatId, commpresedMemory, 'system', model, tokens + counterTokens(commpresedMemory), 1)
     })
   }
 

@@ -22,7 +22,7 @@ Bot.on(Events.MessageCreate, async (message) => {
   if (trigerWords.some(word => MessageContent.includes(word))) {
     await message.channel.sendTyping()
     const typeing = setInterval(() => message.channel.sendTyping(), 5000)
-    const answer = await mary(delitingTrigerWords(MessageContent), message.channelId, message.author.username)
+    const answer = await mary(delitingTrigerWords(MessageContent), message.channelId, message.author.username, message.author.id)
     clearInterval(typeing)
     await message.reply(answer)
     console.log('Bot answer from message')
@@ -32,7 +32,7 @@ Bot.on(Events.MessageCreate, async (message) => {
     if (orginalMessage.author.id === Bot.user?.id) {
       await message.channel.sendTyping()
       const typeing = setInterval(() => message.channel.sendTyping(), 5000)
-      const answer = await mary(delitingTrigerWords(MessageContent), message.channelId, message.author.username)
+      const answer = await mary(delitingTrigerWords(MessageContent), message.channelId, message.author.username, message.author.id)
       clearInterval(typeing)
       await message.reply(answer)
     }
