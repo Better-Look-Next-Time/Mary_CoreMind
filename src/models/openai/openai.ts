@@ -4,6 +4,8 @@ import OpenAI from 'openai'
 import { counterTokens } from '../../helpers/counterTokens'
 import { getCounterChat, getHistoryChat, getTokens, insertChatMessages } from '../../helpers/db'
 
+import { requestToPhind } from '../phind/phind'
+
 export class OpenAIModel {
   private chatId: string
   private modelName: ModelNameType
@@ -26,10 +28,10 @@ export class OpenAIModel {
     return getTokens(this.chatId, this.modelName) + counterTokens(question)
   }
 
-  async Request(histiry: OpenAI.Chat.ChatCompletionMessageParam[]) {
+  async Request(history: OpenAI.Chat.ChatCompletionMessageParam[]) {
     try {
       const completion = await this.openai.chat.completions.create({
-        messages: histiry,
+        messages: history,
         model: this.modelName,
         temperature: this.temperature,
         max_tokens: this.max_tokens,
@@ -39,7 +41,8 @@ export class OpenAIModel {
     }
     catch (error) {
       console.log(error)
-      return 'Прости, мою  сеть взламывают. Отвечу чуть поже.'
+      const answer = await requestToPhind(history)
+      return answer
     }
   }
 
