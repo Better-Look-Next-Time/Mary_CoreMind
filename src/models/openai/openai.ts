@@ -1,8 +1,8 @@
+import type { ModelMaxTokensType, ModelNameType, ModelTemperatureType } from './types'
 import { env } from 'bun'
 import OpenAI from 'openai'
 import { counterTokens } from '../../helpers/counterTokens'
 import { getCounterChat, getHistoryChat, getTokens, insertChatMessages } from '../../helpers/db'
-import type { ModelMaxTokensType, ModelNameType, ModelTemperatureType } from './types'
 
 export class OpenAIModel {
   private chatId: string
@@ -27,14 +27,20 @@ export class OpenAIModel {
   }
 
   async Request(histiry: OpenAI.Chat.ChatCompletionMessageParam[]) {
-    const completion = await this.openai.chat.completions.create({
-      messages: histiry,
-      model: this.modelName,
-      temperature: this.temperature,
-      max_tokens: this.max_tokens,
-      top_p: 1,
-    })
-    return completion.choices[0].message.content ?? 'Прости, мою сеть взламывают. Отвечу чуть позже.'
+    try {
+      const completion = await this.openai.chat.completions.create({
+        messages: histiry,
+        model: this.modelName,
+        temperature: this.temperature,
+        max_tokens: this.max_tokens,
+        top_p: 1,
+      })
+      return completion.choices[0].message.content ?? 'Прости, мою сеть взламывают. Отвечу чуть позже.'
+    }
+    catch (error) {
+      console.log(error)
+      return 'Прости, мою  сеть взламывают. Отвечу чуть поже.'
+    }
   }
 
   async ProcessResponse(question: string, system: string) {

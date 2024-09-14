@@ -1,18 +1,18 @@
 // OpenAI
+import type { ModelNameType } from './models/openai/types'
 import { sleep } from 'bun'
+
 // assest
 import { character, systemPromot } from './assets/character'
 
 import { counterTokens } from './helpers/counterTokens'
-
 // DB
 import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getTokens, insertChatMessages, insertUsersMessage } from './helpers/db'
+
 import { getTime } from './helpers/time'
 
 import { memoryCompression } from './models/openai/compresed'
-
 import { OpenAIModel } from './models/openai/openai'
-import type { ModelNameType } from './models/openai/types'
 
 const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct', 'command-r-plus']
 
@@ -26,6 +26,7 @@ export async function mary(question: string, chatId: string, userName: string, u
 
   const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
   const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-0125', 0.7, 1000)
+  console.log(chatGPT_0125, chatGPT_1106)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const reqests = await Promise.allSettled([
     chatGPT_1106.ProcessResponse(message, systemPromot),
@@ -60,7 +61,7 @@ export async function mary(question: string, chatId: string, userName: string, u
 
   console.log(promot)
 
-  sleep(2000)
+  sleep(45000)
   const answer = await chatGPT_0125.Request([{ role: 'user', content: promot }]) ?? 'Прости произошли проблемы'
 
   modelArray.forEach(async (model) => {

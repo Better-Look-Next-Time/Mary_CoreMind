@@ -13,7 +13,7 @@ export function userAnalysis(historyUser: HistoryUser[]): OpenAI.ChatCompletionM
         
         Conduct a deep analysis, considering tone, word choice, topics, and emotional coloring. Focus on key aspects: openness, emotionality, confidence, intelligence, and social skills.
 
-        Provide a detailed yet concise character description in 3-4 sentences.
+        Describe the character's personality in 1-2 sentences. The total answer should not exceed 500 characters.
       `,
     },
   ]

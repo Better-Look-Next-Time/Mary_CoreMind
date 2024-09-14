@@ -1,8 +1,8 @@
-import { sleep } from 'bun'
 import type { OpenAI } from 'openai'
+import type { HistoryUser } from '../../interface/HistoryUserInterface'
+import { sleep } from 'bun'
 import { userAnalysis } from '../../assets/prompt'
 import { OpenAIModel } from './openai'
-import type { HistoryUser } from '../../interface/HistoryUserInterface'
 
 const Llama = new OpenAIModel('', 'llama-2-7b-chat', 0.3, 500)
 
