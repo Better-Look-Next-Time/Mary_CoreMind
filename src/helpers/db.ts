@@ -1,21 +1,9 @@
 import type OpenAI from 'openai'
+import type { AvailabilityAIResult, CounterResult, DataAvailabilityResult, TokenResult, UserCharacterResult, UserMessageType } from '../interface/DatabaseInterface'
 import type { HistoryUser } from '../interface/HistoryUserInterface'
 import type { ModelNameType, ModelRoleType } from './../models/openai/types'
+
 import { Database } from 'bun:sqlite'
-
-interface CounterResult {
-  counter: number | null
-}
-
-interface TokenResult {
-  tokens: number | null
-}
-
-interface UserCharacterResult {
-  userCharacter: string | null
-}
-
-type UserMessageType = 'message' | 'character'
 
 const db = new Database('./mary.sqlite')
 
@@ -23,12 +11,15 @@ const historyError: OpenAI.Chat.ChatCompletionMessageParam[] = [{ content: 'Пр
 
 export function createTables() {
   const tables = db.query(`SELECT name FROM sqlite_master WHERE type='table'`).all()
-  if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message')) {
+  if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message' || table.name === 'ai_availability')) {
     db.query(
       `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model", "tokens" INTEGER, "counter" INTEGER  )`,
     ).run()
     db.query(
       `CREATE TABLE "users_message" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "chat_id" TEXT, "user_id" TEXT, "type" TEXT,  "content" TEXT, "counter" INTEGER )`,
+    ).run()
+    db.query(
+      `CREATE TABLE "ai_availability" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT, "model" TEXT, "is_active" INTEGER, "next_available_date" TEXT)`,
     ).run()
   }
 }
@@ -45,6 +36,15 @@ export function insertChatMessages(chat_id: string, content: string, role: Model
 export function insertUsersMessage(chat_id: string, user_id: string, type: UserMessageType, content: string, counter: number) {
   try {
     db.query(`INSERT INTO "users_message" ( chat_id, user_id, type, content, counter ) VALUES (?1, ?2, ?3, ?4, ?5) `).run(chat_id, user_id, type, content, counter)
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
+export function insertAIAvailability(model: ModelNameType, status: boolean, data: Date) {
+  try {
+    db.query(`INSERT INTO "ai_availability" (model, is_active, next_available_date) VALUES (?1, ?2, ?3)`).run(model, status, data.toString())
   }
   catch (error) {
     console.log(error)
@@ -113,5 +113,28 @@ export function getUserCharacter(chat_id: string, user_id: string) {
   catch (error) {
     console.log(error)
     return 'О пользователе нечего сказть'
+  }
+}
+
+export function getStatusAI(model: ModelNameType) {
+  try {
+    const aiStatus = db.query(`SELECT is_active FROM ai_availability WHERE model = ?1 ORDER BY id DESC LIMIT 1 `).get(model) as AvailabilityAIResult
+    console.log(aiStatus)
+    return aiStatus?.is_active ?? true
+  }
+  catch (error) {
+    console.log(error)
+    return false
+  }
+}
+
+export function getDataAIAvailability(model: ModelNameType) {
+  try {
+    const data = db.query(`SELECT next_available_date FROM ai_availability WHERE model =?1 ORDER BY id DESC LIMIT 1`).get(model) as DataAvailabilityResult
+    console.log(data)
+    return data?.next_available_date ? new Date(data.next_available_date) : new Date()
+  }
+  catch (error) {
+    return new Date()
   }
 }

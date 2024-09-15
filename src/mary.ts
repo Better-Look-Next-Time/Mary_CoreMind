@@ -14,7 +14,7 @@ import { getTime } from './helpers/time'
 import { memoryCompression } from './models/openai/compresed'
 import { OpenAIModel } from './models/openai/openai'
 
-const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct', 'command-r-plus']
+const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct']
 
 export async function mary(question: string, chatId: string, userName: string, userId: string) {
   createTables()
@@ -85,8 +85,6 @@ export async function mary(question: string, chatId: string, userName: string, u
       insertChatMessages(chatId, commpresedMemory, 'system', model, tokens + counterTokens(commpresedMemory), 1)
     })
   }
-
-  console.log(answer)
 
   return answer
 }

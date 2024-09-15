@@ -25,9 +25,9 @@ export async function memoryCompression(historyChat: OpenAI.Chat.ChatCompletionM
   })
   console.log(messageLists)
   const promot = `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
-  const commpresedMemory = await Llama.Request([{ role: 'user', content: promot }])
+  const commpresedMemory = await Llama.Request([{ role: 'user', content: promot }]) ?? 'Я не чего не помню'
   await sleep(1000)
-  const userCharacter = await Llama.Request(userAnalysis(historyUser))
+  const userCharacter = await Llama.Request(userAnalysis(historyUser)) ?? 'Я не чего не могу сказать'
 
   return { commpresedMemory, userCharacter }
 }
