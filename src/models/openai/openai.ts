@@ -28,7 +28,7 @@ export class OpenAIModel {
     return getTokens(this.chatId, this.modelName) + counterTokens(question)
   }
 
-  private ChangeToStatus() {
+  ChangeToStatus() {
     const dataStatus = getDataAIAvailability(this.modelName)
     console.log(dataStatus)
     const dataNow = new Date()

@@ -63,7 +63,7 @@ export async function mary(question: string, chatId: string, userName: string, u
 
   sleep(45000)
   const answer = await chatGPT_0125.Request([{ role: 'user', content: promot }]) ?? 'Прости произошли проблемы'
-
+  chatGPT_0125.ChangeToStatus()
   modelArray.forEach(async (model) => {
     const counter = getCounterChat(chatId, model)
     console.log(counter)
@@ -85,6 +85,5 @@ export async function mary(question: string, chatId: string, userName: string, u
       insertChatMessages(chatId, commpresedMemory, 'system', model, tokens + counterTokens(commpresedMemory), 1)
     })
   }
-
   return answer
 }

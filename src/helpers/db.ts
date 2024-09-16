@@ -85,7 +85,7 @@ export function getCounterChat(chat_id: string, model: ModelNameType) {
 
 export function getCounterUser(chat_id: string, user_id: string) {
   try {
-    const counter = db.query(`SELECT counter FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2 AND type = 'message' ORDER BY id DESC `).get(chat_id, user_id) as CounterResult
+    const counter = db.query(`SELECT counter FROM "users_message" WHERE chat_id = ?1 AND user_id = ?2  ORDER BY id DESC `).get(chat_id, user_id) as CounterResult
     return counter?.counter ?? 0
   }
   catch (error) {

@@ -20,7 +20,7 @@ export async function requestToPhind(history: OpenAI.Chat.ChatCompletionMessageP
       ...history,
     ],
     requested_model: 'llama3-8b-phind-8b-v2-checkpoint-5500',
-    user_input: history[history.length - 1].content,
+    user_input: `[INST]The text must contain no more than 500 tokens[/INST]  ${history[history.length - 1].content}`,
   }
   try {
     const response = await axios.post('https://https.extension.phind.com/agent/', data, {
