@@ -53,7 +53,7 @@ export function insertAIAvailability(model: ModelNameType, status: boolean, data
 
 export function getHistoryChat(chat_id: string, model: ModelNameType, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
   try {
-    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC LIMIT ?3`).all(chat_id, model, counter === 1 ? 3 : counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
+    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC LIMIT ?3`).all(chat_id, model,counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
     return history.reverse()
   }
   catch (error) {
