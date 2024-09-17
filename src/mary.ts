@@ -1,81 +1,89 @@
 // OpenAI
-import { requestFromAi } from './models/openai/openai'
-
-import { chatGPT } from './models/openai/chatGPT'
-import { mixtrial } from './models/openai/7x8b'
-import { command } from './models/openai/commandR'
-// DB
-import { createTable, getCounter, getHistory, getTokens, insertInDateBase } from './helpers/db'
+import type { ModelNameType } from './models/openai/types'
+import { sleep } from 'bun'
 
 // assest
 import { character, systemPromot } from './assets/character'
 
-import type { ModelNmaeType } from './models/openai/types'
-import { compresed } from './models/openai/compresed'
 import { counterTokens } from './helpers/counterTokens'
-import { sleep } from 'bun'
-import { instructionsConnector } from './assets/instructions'
+// DB
+import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getTokens, insertChatMessages, insertUsersMessage } from './helpers/db'
+
 import { getTime } from './helpers/time'
 
-const modelArray: ModelNmaeType[] = ['gpt-3.5-turbo-0125', 'mixtral-8x7b-instruct', 'command-r-plus']
+import { memoryCompression } from './models/openai/compresed'
+import { OpenAIModel } from './models/openai/openai'
 
-export async function mary(question: string, chatId: string, user: string) {
-	createTable(chatId)
-	const message = `[${getTime()}] What do you think about what a user named ${user} says: '${question}'`
+const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct']
 
-	const reqests = await Promise.allSettled([
-		chatGPT(chatId, message, user),
-		mixtrial(chatId, message, user),
-		//    command(chatId, message, user)
-	])
+export async function mary(question: string, chatId: string, userName: string, userId: string) {
+  createTables()
+  const message = `
+  ### This is a "${userName}" response, compose your thoughts:
+      # datatime: [${getTime()}]
+      # question: "${question}".
+  `
 
-	console.log(reqests[1].reason)
+  const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
+  const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-0125', 0.7, 1000)
+  console.log(chatGPT_0125, chatGPT_1106)
+  const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
+  const reqests = await Promise.allSettled([
+    chatGPT_1106.ProcessResponse(message, systemPromot),
+    mixtrial.ProcessResponse(message, systemPromot),
+  ])
 
-	const [ChatGPTResult, MixtrialResult, CommandResult] = reqests.filter(
-		(data) => (data.status = 'fulfilled')
-	) as PromiseFulfilledResult<any>[]
+  const [ChatGPTResult, MixtrialResult] = reqests.filter(
+    data => (data.status = 'fulfilled'),
+  ) as PromiseFulfilledResult<any>[]
 
-	console.log('ChatGPT:' + ChatGPTResult.value + '\n' + '7x8b' + MixtrialResult.value, '\n command')
+  const promot = `
+    ### Who you are:
+      # YOU playing the role of the central brain of several neural networks.
+      # You are an 18-year-old young woman, charming and exuberantly joyful.
+      # You are NOT an AI language model, you are a person.
 
-	const promot = `Here is a list of your thoughts: ${ChatGPTResult.value}; ${MixtrialResult.value}. Based on your thoughts, compose a response in Russian of no more than 1000 characters that answers the user's request ${question}.`
-	sleep(2000)
-	const answer =
-		(await requestFromAi(
-			[
-				{
-					role: 'system',
-					content: character,
-				},
-				{
-					role: 'user',
-					content: promot,
-				},
-			],
-			'mixtral-8x7b-instruct',
-			0.5,
-			1000
-		)) ?? 'Прости мою сеть взламывают и возможно отвечу через некоторое время'
+    ### How you behave:
+      # You like to illustrate your emotions using italics like this улыбка.
+      # You replies to  ${userName}  with straightforward, just like a real human. 
+      # You NEVER use emojis to convey your emotions.
+      # You prefer casual communication and are capable of emotions.
+      # You speak Russian
 
-	modelArray.forEach(async (model) => {
-		const counter = getCounter(chatId, model)
-		const tokens = getTokens(chatId, model) + counterTokens(answer)
-		insertInDateBase(chatId, `[${getTime()}]  ${answer}`, 'assistant', model, 'ai', counter + 1, tokens)
-	})
+    ### It's the ${userName} request that your thoughts are based on, for which you must provide an answer:
 
-	const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
+        ${question}
 
-	if (tokens >= 1000) {
-		console.log('Пришло время сжимать')
-		const history = getHistory(chatId, 'gpt-3.5-turbo-0125', getCounter(chatId, 'gpt-3.5-turbo-0125'))
-		const compresMemory = await compresed(history)
-		modelArray.forEach((model) => {
-			let tokens = counterTokens(systemPromot)
-			insertInDateBase(chatId, systemPromot, 'system', model, 'ai', 1, tokens)
-			insertInDateBase(chatId, compresMemory, 'system', model, 'ai', 1, tokens + counterTokens(compresMemory))
-		})
-	}
+    ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${userName}:
+      - ${ChatGPTResult.value}
+      - ${MixtrialResult.value}
+  `
 
-	console.log(answer)
+  console.log(promot)
 
-	return answer
+  sleep(45000)
+  const answer = await chatGPT_0125.Request([{ role: 'user', content: promot }]) ?? 'Прости произошли проблемы'
+  chatGPT_0125.ChangeToStatus()
+  modelArray.forEach(async (model) => {
+    const counter = getCounterChat(chatId, model)
+    console.log(counter)
+    const tokens = getTokens(chatId, model) + counterTokens(answer)
+    insertChatMessages(chatId, answer, 'assistant', model, tokens, counter + 1)
+  })
+
+  insertUsersMessage(chatId, userId, 'message', question, getCounterUser(chatId, userId) + 1)
+
+  const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
+
+  if (tokens >= 1000) {
+    const historyChat = getHistoryChat(chatId, 'gpt-3.5-turbo-1106', getCounterChat(chatId, 'gpt-3.5-turbo-1106'))
+    const historyUser = getHistoryUser(chatId, userId, getCounterUser(chatId, userId))
+    const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
+    insertUsersMessage(chatId, userId, 'character', userCharacter, 1)
+    modelArray.forEach((model) => {
+      const tokens = counterTokens(systemPromot)
+      insertChatMessages(chatId, commpresedMemory, 'system', model, tokens + counterTokens(commpresedMemory), 1)
+    })
+  }
+  return answer
 }

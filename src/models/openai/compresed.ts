@@ -1,45 +1,33 @@
-import { requestFromAi } from './openai'
-import type { ModelRoleType } from './types'
-import { systemPromot } from '../../assets/character'
-import { getTime } from '../../helpers/time'
-interface ObjectDelimiter {
-	user: []
-	system: []
-	assistant: []
+import type { OpenAI } from 'openai'
+import type { HistoryUser } from '../../interface/HistoryUserInterface'
+import { sleep } from 'bun'
+import { userAnalysis } from '../../assets/prompt'
+import { OpenAIModel } from './openai'
+
+const Llama = new OpenAIModel('', 'llama-2-7b-chat', 0.3, 500)
+
+interface MessageLists {
+  user: string[]
+  assistant: string[]
 }
 
-interface ObjectHistory {
-	content: string
-	role: ModelRoleType
-}
+export async function memoryCompression(historyChat: OpenAI.Chat.ChatCompletionMessageParam[], historyUser: HistoryUser[]) {
+  const messageLists: MessageLists = {
+    user: [],
+    assistant: [],
+  }
+  const filteredHistory = historyChat.filter(message => message.role === 'assistant' || message.role === 'user')
+  console.log(filteredHistory)
+  filteredHistory.forEach((message) => {
+    if (message.role === 'assistant' || message.role === 'user') {
+      messageLists[message.role].push(message.content as string)
+    }
+  })
+  console.log(messageLists)
+  const promot = `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
+  const commpresedMemory = await Llama.Request([{ role: 'user', content: promot }]) ?? 'Я не чего не помню'
+  await sleep(1000)
+  const userCharacter = await Llama.Request(userAnalysis(historyUser)) ?? 'Я не чего не могу сказать'
 
-export async function compresed(history: ObjectHistory[]) {
-	const obj: ObjectDelimiter = {
-		user: [],
-		system: [],
-		assistant: [],
-	}
-	history = history.slice(1)
-	console.log('Итсори для сэжаиия:')
-	console.log(history)
-	history.forEach((item: ObjectHistory) => {
-		const mas = obj[item.role]
-		mas.push(item.content)
-	})
-
-	const message = `Recap the key message of this communication by combining the following messages into one: from users ${obj.user}, and from Mary ${obj.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
-
-	const answer = await requestFromAi(
-		[
-			{
-				role: 'user',
-				content: message,
-			},
-		],
-		'llama-2-70b-chat',
-		0.3,
-		500
-	)
-
-	return `[${getTime()}] ${answer}`
+  return { commpresedMemory, userCharacter }
 }
