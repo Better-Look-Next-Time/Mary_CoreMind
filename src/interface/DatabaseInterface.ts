@@ -1,3 +1,7 @@
+export interface ContentResult {
+  content: string | null
+}
+
 export interface CounterResult {
   counter: number | null
 }

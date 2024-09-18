@@ -1,5 +1,5 @@
 import type OpenAI from 'openai'
-import type { AvailabilityAIResult, CounterResult, DataAvailabilityResult, TokenResult, UserCharacterResult, UserMessageType } from '../interface/DatabaseInterface'
+import type { AvailabilityAIResult, ContentResult, CounterResult, DataAvailabilityResult, TokenResult, UserCharacterResult, UserMessageType } from '../interface/DatabaseInterface'
 import type { HistoryUser } from '../interface/HistoryUserInterface'
 import type { ModelNameType, ModelRoleType } from './../models/openai/types'
 
@@ -13,7 +13,7 @@ export function createTables() {
   const tables = db.query(`SELECT name FROM sqlite_master WHERE type='table'`).all()
   if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message' || table.name === 'ai_availability')) {
     db.query(
-      `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model", "tokens" INTEGER, "counter" INTEGER  )`,
+      `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model" TEXT, "type" TEXT, "tokens" INTEGER, "counter" INTEGER  )`,
     ).run()
     db.query(
       `CREATE TABLE "users_message" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "chat_id" TEXT, "user_id" TEXT, "type" TEXT,  "content" TEXT, "counter" INTEGER )`,
@@ -26,9 +26,17 @@ export function createTables() {
 
 export function insertChatMessages(chat_id: string, content: string, role: ModelRoleType, model: ModelNameType, tokens: number, counter: number) {
   try {
-    db.query(`INSERT INTO "chat_messages" (chat_id, content, role, model, tokens, counter) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`).run(chat_id, content, role, model, tokens, counter)
+    db.query(`INSERT INTO "chat_messages" (chat_id, content, role, model, type, tokens, counter) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`).run(chat_id, content, role, model, 'message', tokens, counter)
   }
   catch (error) {
+    console.log(error)
+  }
+}
+
+export function insertChatMemory(chat_id: string, content: string, counter: number) {
+  try {
+    db.query(`INSER INTO "chat_messages" (chat_id, content, type, counter) VALUES (?1, ?2, 'memory', ?3)`).run(chat_id, content, counter)
+  } catch (error) {
     console.log(error)
   }
 }
@@ -53,12 +61,23 @@ export function insertAIAvailability(model: ModelNameType, status: boolean, data
 
 export function getHistoryChat(chat_id: string, model: ModelNameType, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
   try {
-    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC LIMIT ?3`).all(chat_id, model,counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
+    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 AND type = 'message'  ORDER BY id DESC LIMIT ?3`).all(chat_id, model,counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
     return history.reverse()
   }
   catch (error) {
     console.log(error)
     return historyError
+  }
+}
+
+export function getMemoryChat(chat_id: string) {
+  try {
+    const  memory = db.query(`SELECT content FROM  "chat_messages" WHERE chat_id = ?1 AND type = 'memory' ORDER BY id DESC LIMIT 1`).get(chat_id) as  ContentResult
+    return memory?.content ?? ''
+  }
+  catch (error) {
+    console.log(error)
+    return ''
   }
 }
 

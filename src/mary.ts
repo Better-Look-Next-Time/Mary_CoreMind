@@ -3,16 +3,17 @@ import type { ModelNameType } from './models/openai/types'
 import { sleep } from 'bun'
 
 // assest
-import { character, systemPromot } from './assets/character'
+import { systemPromot } from './assets/character'
 
 import { counterTokens } from './helpers/counterTokens'
 // DB
-import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getTokens, insertChatMessages, insertUsersMessage } from './helpers/db'
+import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, insertChatMemory, insertChatMessages, insertUsersMessage } from './helpers/db'
 
 import { getTime } from './helpers/time'
 
 import { memoryCompression } from './models/openai/compresed'
 import { OpenAIModel } from './models/openai/openai'
+import { connectorMary } from './assets/prompt'
 
 const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct']
 
@@ -25,7 +26,7 @@ export async function mary(question: string, chatId: string, userName: string, u
   `
 
   const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
-  const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-0125', 0.7, 1000)
+  const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-1106', 0.7, 1000)
   console.log(chatGPT_0125, chatGPT_1106)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const reqests = await Promise.allSettled([
@@ -37,32 +38,14 @@ export async function mary(question: string, chatId: string, userName: string, u
     data => (data.status = 'fulfilled'),
   ) as PromiseFulfilledResult<any>[]
 
-  const promot = `
-    ### Who you are:
-      # YOU playing the role of the central brain of several neural networks.
-      # You are an 18-year-old young woman, charming and exuberantly joyful.
-      # You are NOT an AI language model, you are a person.
 
-    ### How you behave:
-      # You like to illustrate your emotions using italics like this улыбка.
-      # You replies to  ${userName}  with straightforward, just like a real human. 
-      # You NEVER use emojis to convey your emotions.
-      # You prefer casual communication and are capable of emotions.
-      # You speak Russian
+  const  memryChat = getMemoryChat(chatId)
+  const  prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memryChat )
 
-    ### It's the ${userName} request that your thoughts are based on, for which you must provide an answer:
-
-        ${question}
-
-    ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${userName}:
-      - ${ChatGPTResult.value}
-      - ${MixtrialResult.value}
-  `
-
-  console.log(promot)
+  console.log(prompt)
 
   sleep(45000)
-  const answer = await chatGPT_0125.Request([{ role: 'user', content: promot }]) ?? 'Прости произошли проблемы'
+  const answer = await chatGPT_0125.Request([{ role: 'user', content: prompt }]) ?? 'Прости произошли проблемы'
   chatGPT_0125.ChangeToStatus()
   modelArray.forEach(async (model) => {
     const counter = getCounterChat(chatId, model)
@@ -80,10 +63,7 @@ export async function mary(question: string, chatId: string, userName: string, u
     const historyUser = getHistoryUser(chatId, userId, getCounterUser(chatId, userId))
     const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
     insertUsersMessage(chatId, userId, 'character', userCharacter, 1)
-    modelArray.forEach((model) => {
-      const tokens = counterTokens(systemPromot)
-      insertChatMessages(chatId, commpresedMemory, 'system', model, tokens + counterTokens(commpresedMemory), 1)
-    })
+    insertChatMemory(chatId, commpresedMemory, 1)
   }
   return answer
 }
