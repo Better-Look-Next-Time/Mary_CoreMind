@@ -35,7 +35,7 @@ export function insertChatMessages(chat_id: string, content: string, role: Model
 
 export function insertChatMemory(chat_id: string, content: string, counter: number) {
   try {
-    db.query(`INSER INTO "chat_messages" (chat_id, content, type, counter) VALUES (?1, ?2, 'memory', ?3)`).run(chat_id, content, counter)
+    db.query(`INSERT INTO "chat_messages" (chat_id, content, type, counter) VALUES (?1, ?2, 'memory', ?3)`).run(chat_id, content, counter)
   } catch (error) {
     console.log(error)
   }

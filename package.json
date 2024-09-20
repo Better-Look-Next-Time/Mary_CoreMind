@@ -13,10 +13,10 @@
   "dependencies": {
     "axios": "^1.7.7",
     "discord.js": "^14.16.2",
-    "openai": "^4.61.0"
+    "openai": "^4.62.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.6.0",
+    "@antfu/eslint-config": "^3.6.2",
     "@types/bun": "^1.1.9",
     "eslint": "^9.10.0",
     "prettier": "^3.3.3"
