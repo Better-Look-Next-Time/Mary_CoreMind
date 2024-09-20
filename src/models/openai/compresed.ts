@@ -1,15 +1,11 @@
 import type { OpenAI } from 'openai'
 import type { HistoryUser } from '../../interface/HistoryUserInterface'
+import type { MessageLists } from '../../interface/MessageLists'
 import { sleep } from 'bun'
-import { userAnalysis } from '../../assets/prompt'
+import { compressedMemory, userAnalysis } from '../../assets/prompt'
 import { OpenAIModel } from './openai'
 
-const Llama = new OpenAIModel('', 'llama-2-7b-chat', 0.3, 500)
-
-interface MessageLists {
-  user: string[]
-  assistant: string[]
-}
+const Llama = new OpenAIModel('', 'llama-2-7b-chat', 0.3, 400)
 
 export async function memoryCompression(historyChat: OpenAI.Chat.ChatCompletionMessageParam[], historyUser: HistoryUser[]) {
   const messageLists: MessageLists = {
@@ -24,10 +20,9 @@ export async function memoryCompression(historyChat: OpenAI.Chat.ChatCompletionM
     }
   })
   console.log(messageLists)
-  const promot = `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
-  const commpresedMemory = await Llama.Request([{ role: 'user', content: promot }]) ?? 'Я не чего не помню'
+  const commpresedMemory = await Llama.Request([{ role: 'user', content: compressedMemory(messageLists) }]) ?? ''
   await sleep(1000)
-  const userCharacter = await Llama.Request(userAnalysis(historyUser)) ?? 'Я не чего не могу сказать'
+  const userCharacter = await Llama.Request(userAnalysis(historyUser)) ?? ''
 
   return { commpresedMemory, userCharacter }
 }

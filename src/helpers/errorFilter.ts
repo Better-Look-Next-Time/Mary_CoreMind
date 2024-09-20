@@ -13,9 +13,10 @@ const  errorTime: Record<string, number> = {
 
 
 export function errorFilter(error: string) {
-  const  match = error.match(/error: (\d+)/)
+  console.log(error)
+  const  match = error.match(/error:\s*(\d+)/)
+  console.log(match)
   if(!match) return errorTime.default;
-
   const  code = parseInt(match[1])
   console.log(code)
   const  category = Object.keys(errorCodes).find(key => errorCodes[key].includes(code))

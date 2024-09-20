@@ -7,7 +7,7 @@ import { systemPromot } from './assets/character'
 
 import { counterTokens } from './helpers/counterTokens'
 // DB
-import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, insertChatMemory, insertChatMessages, insertUsersMessage } from './helpers/db'
+import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertChatMemory, insertChatMessages, insertUsersMessage } from './helpers/db'
 
 import { getTime } from './helpers/time'
 
@@ -39,12 +39,12 @@ export async function mary(question: string, chatId: string, userName: string, u
   ) as PromiseFulfilledResult<any>[]
 
 
-  const  memryChat = getMemoryChat(chatId)
-  const  prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memryChat )
+  const  memoryChat = getMemoryChat(chatId)
+  const userCharacter = getUserCharacter(chatId, userId)
+  const  prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memoryChat, userCharacter )
 
   console.log(prompt)
 
-  sleep(45000)
   const answer = await chatGPT_0125.Request([{ role: 'user', content: prompt }]) ?? 'Прости произошли проблемы'
   chatGPT_0125.ChangeToStatus()
   modelArray.forEach(async (model) => {

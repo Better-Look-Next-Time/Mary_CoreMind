@@ -1,5 +1,6 @@
 import type OpenAI from 'openai'
 import type { HistoryUser } from '../interface/HistoryUserInterface'
+import type { MessageLists } from '../interface/MessageLists'
 
 export function userAnalysis(historyUser: HistoryUser[]): OpenAI.ChatCompletionMessageParam[] {
   return [
@@ -19,9 +20,16 @@ export function userAnalysis(historyUser: HistoryUser[]): OpenAI.ChatCompletionM
   ]
 }
 
-export function connectorMary(question: string,  userName: string, gptAnswer: string,  mixtrialAnswer: string, memoryChat: string) {
+export function compressedMemory(messageLists :MessageLists) :string {
+  return `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
+}
+
+export function connectorMary(question: string,  userName: string, gptAnswer: string,  mixtrialAnswer: string, memoryChat: string, userCharacter: string) {
   const  memory = memoryChat === '' ? '' : `
     ### Your conversation memories from this chat: ${memoryChat}
+  `
+  const  character = userCharacter === '' ? '' : `
+    ### This is the character of ${userName}: ${userCharacter}
   `
   return `
     ### Who you are:
@@ -39,6 +47,8 @@ export function connectorMary(question: string,  userName: string, gptAnswer: st
  
 
     ${memory}
+
+    ${character}
 
     ### It's the ${userName} request that your thoughts are based on, for which you must provide an answer:
 

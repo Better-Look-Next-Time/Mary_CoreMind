@@ -127,11 +127,11 @@ export function getTokens(chat_id: string, model: ModelNameType) {
 export function getUserCharacter(chat_id: string, user_id: string) {
   try {
     const userCharacter = db.query(`SELECT content FROM users_message WHERE chat_id = ?1 AND user_id = ?2 ORDER BY id DESC LIMIT 1`).get(chat_id, user_id) as UserCharacterResult
-    return userCharacter.userCharacter ?? 'О пользователе нечего сказть'
+    return userCharacter?.userCharacter ?? ''
   }
   catch (error) {
     console.log(error)
-    return 'О пользователе нечего сказть'
+    return ''
   }
 }
 

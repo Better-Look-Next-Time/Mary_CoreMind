@@ -62,7 +62,9 @@ export class OpenAIModel {
     catch (error) {
       console.log(error)
       const data = new Date()
-      const waitingTime = errorFilter(error as string)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      const waitingTime = errorFilter(errorMessage)
+      console.log(waitingTime)
       data.setHours(data.getHours() +  waitingTime)
       insertAIAvailability(this.modelName, false, data)
       return requestToPhind(history)
