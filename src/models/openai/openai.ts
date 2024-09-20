@@ -5,6 +5,7 @@ import { counterTokens } from '../../helpers/counterTokens'
 import { getCounterChat, getDataAIAvailability, getHistoryChat, getStatusAI, getTokens, insertAIAvailability, insertChatMessages } from '../../helpers/db'
 
 import { requestToPhind } from '../phind/phind'
+import { errorFilter } from '../../helpers/errorFilter'
 
 export class OpenAIModel {
   private chatId: string
@@ -61,7 +62,8 @@ export class OpenAIModel {
     catch (error) {
       console.log(error)
       const data = new Date()
-      data.setHours(data.getHours() + 6)
+      const waitingTime = errorFilter(error as string)
+      data.setHours(data.getHours() +  waitingTime)
       insertAIAvailability(this.modelName, false, data)
       return requestToPhind(history)
     }
