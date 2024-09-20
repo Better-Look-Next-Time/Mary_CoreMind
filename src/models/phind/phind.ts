@@ -7,7 +7,6 @@ function createMessage(answerList: string[]) {
     const word = JSON.parse(line).choices[0].delta.content
     answer += word
   })
-  console.log(answer)
   return answer
 }
 

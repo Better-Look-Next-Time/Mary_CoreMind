@@ -4,8 +4,8 @@ import OpenAI from 'openai'
 import { counterTokens } from '../../helpers/counterTokens'
 import { getCounterChat, getDataAIAvailability, getHistoryChat, getStatusAI, getTokens, insertAIAvailability, insertChatMessages } from '../../helpers/db'
 
-import { requestToPhind } from '../phind/phind'
 import { errorFilter } from '../../helpers/errorFilter'
+import { requestToPhind } from '../phind/phind'
 
 export class OpenAIModel {
   private chatId: string
@@ -36,9 +36,6 @@ export class OpenAIModel {
     if (dataStatus.getTime() <= dataNow.getTime()) {
       insertAIAvailability(this.modelName, true, dataNow)
     }
-    else {
-      console.log('Ещё не время')
-    }
   }
 
   async Request(history: OpenAI.Chat.ChatCompletionMessageParam[]) {
@@ -64,8 +61,7 @@ export class OpenAIModel {
       const data = new Date()
       const errorMessage = error instanceof Error ? error.message : String(error)
       const waitingTime = errorFilter(errorMessage)
-      console.log(waitingTime)
-      data.setHours(data.getHours() +  waitingTime)
+      data.setHours(data.getHours() + waitingTime)
       insertAIAvailability(this.modelName, false, data)
       return requestToPhind(history)
     }
@@ -76,7 +72,6 @@ export class OpenAIModel {
     insertChatMessages(this.chatId, system, 'system', this.modelName, tokens, this.GetCounter)
     insertChatMessages(this.chatId, question, 'user', this.modelName, tokens, this.GetCounter) // question for User
     const history = getHistoryChat(this.chatId, this.modelName, this.GetCounter)
-    console.log(history)
     const response = await this.Request(history)
     console.log(response)
     this.ChangeToStatus()

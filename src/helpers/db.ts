@@ -36,7 +36,8 @@ export function insertChatMessages(chat_id: string, content: string, role: Model
 export function insertChatMemory(chat_id: string, content: string, counter: number) {
   try {
     db.query(`INSERT INTO "chat_messages" (chat_id, content, type, counter) VALUES (?1, ?2, 'memory', ?3)`).run(chat_id, content, counter)
-  } catch (error) {
+  }
+  catch (error) {
     console.log(error)
   }
 }
@@ -61,7 +62,7 @@ export function insertAIAvailability(model: ModelNameType, status: boolean, data
 
 export function getHistoryChat(chat_id: string, model: ModelNameType, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
   try {
-    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 AND type = 'message'  ORDER BY id DESC LIMIT ?3`).all(chat_id, model,counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
+    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 AND type = 'message'  ORDER BY id DESC LIMIT ?3`).all(chat_id, model, counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
     return history.reverse()
   }
   catch (error) {
@@ -72,7 +73,7 @@ export function getHistoryChat(chat_id: string, model: ModelNameType, counter: n
 
 export function getMemoryChat(chat_id: string) {
   try {
-    const  memory = db.query(`SELECT content FROM  "chat_messages" WHERE chat_id = ?1 AND type = 'memory' ORDER BY id DESC LIMIT 1`).get(chat_id) as  ContentResult
+    const memory = db.query(`SELECT content FROM  "chat_messages" WHERE chat_id = ?1 AND type = 'memory' ORDER BY id DESC LIMIT 1`).get(chat_id) as ContentResult
     return memory?.content ?? ''
   }
   catch (error) {
@@ -154,6 +155,7 @@ export function getDataAIAvailability(model: ModelNameType) {
     return data?.next_available_date ? new Date(data.next_available_date) : new Date()
   }
   catch (error) {
+    console.log(error)
     return new Date()
   }
 }

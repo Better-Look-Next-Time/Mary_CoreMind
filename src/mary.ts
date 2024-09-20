@@ -5,15 +5,15 @@ import { sleep } from 'bun'
 // assest
 import { systemPromot } from './assets/character'
 
+import { connectorMary } from './assets/prompt'
 import { counterTokens } from './helpers/counterTokens'
+
 // DB
 import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertChatMemory, insertChatMessages, insertUsersMessage } from './helpers/db'
 
 import { getTime } from './helpers/time'
-
 import { memoryCompression } from './models/openai/compresed'
 import { OpenAIModel } from './models/openai/openai'
-import { connectorMary } from './assets/prompt'
 
 const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct']
 
@@ -27,7 +27,6 @@ export async function mary(question: string, chatId: string, userName: string, u
 
   const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
   const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-1106', 0.7, 1000)
-  console.log(chatGPT_0125, chatGPT_1106)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const reqests = await Promise.allSettled([
     chatGPT_1106.ProcessResponse(message, systemPromot),
@@ -38,10 +37,9 @@ export async function mary(question: string, chatId: string, userName: string, u
     data => (data.status = 'fulfilled'),
   ) as PromiseFulfilledResult<any>[]
 
-
-  const  memoryChat = getMemoryChat(chatId)
+  const memoryChat = getMemoryChat(chatId)
   const userCharacter = getUserCharacter(chatId, userId)
-  const  prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memoryChat, userCharacter )
+  const prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memoryChat, userCharacter)
 
   console.log(prompt)
 
@@ -49,7 +47,6 @@ export async function mary(question: string, chatId: string, userName: string, u
   chatGPT_0125.ChangeToStatus()
   modelArray.forEach(async (model) => {
     const counter = getCounterChat(chatId, model)
-    console.log(counter)
     const tokens = getTokens(chatId, model) + counterTokens(answer)
     insertChatMessages(chatId, answer, 'assistant', model, tokens, counter + 1)
   })
