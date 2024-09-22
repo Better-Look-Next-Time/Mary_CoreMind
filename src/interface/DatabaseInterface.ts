@@ -22,4 +22,8 @@ export interface DataAvailabilityResult {
   next_available_date: string | null
 }
 
+export interface ResponseHashResult {
+  response: string | null
+}
+
 export type UserMessageType = 'message' | 'character'

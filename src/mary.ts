@@ -1,6 +1,6 @@
 // OpenAI
 import type { ModelNameType } from './models/openai/types'
-import { sleep } from 'bun'
+import { hash, sleep } from 'bun'
 
 // assest
 import { systemPromot } from './assets/character'
@@ -9,7 +9,7 @@ import { connectorMary } from './assets/prompt'
 import { counterTokens } from './helpers/counterTokens'
 
 // DB
-import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertChatMemory, insertChatMessages, insertUsersMessage } from './helpers/db'
+import { createTables, getCounterChat, getCounterUser, getHashQuery, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertAiHash, insertChatMemory, insertChatMessages, insertUsersMessage } from './helpers/db'
 
 import { getTime } from './helpers/time'
 import { memoryCompression } from './models/openai/compresed'
@@ -25,21 +25,43 @@ export async function mary(question: string, chatId: string, userName: string, u
       # question: "${question}".
   `
 
+  const hashList: string[] = []
+  modelArray.forEach((model: ModelNameType) => {
+    const hash = getHashQuery(chatId, model, question)
+    console.log(hash)
+    if (hash !== null) {
+      hashList.push(hash)
+    }
+  })
+
+  console.log(hashList)
+
   const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
   const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-1106', 0.7, 1000)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
-  const reqests = await Promise.allSettled([
-    chatGPT_1106.ProcessResponse(message, systemPromot),
-    mixtrial.ProcessResponse(message, systemPromot),
-  ])
-
-  const [ChatGPTResult, MixtrialResult] = reqests.filter(
-    data => (data.status = 'fulfilled'),
-  ) as PromiseFulfilledResult<any>[]
-
   const memoryChat = getMemoryChat(chatId)
   const userCharacter = getUserCharacter(chatId, userId)
-  const prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memoryChat, userCharacter)
+
+  let prompt = ''
+
+  if (hashList.length !== 0) {
+    console.log('Хеш есть')
+    const [ChatGPTResult, MixtrialResult] = hashList
+    prompt = connectorMary(question, userName, ChatGPTResult, MixtrialResult, memoryChat, userCharacter)
+  }
+  else {
+    const reqests = await Promise.allSettled([
+      chatGPT_1106.ProcessResponse(message, systemPromot),
+      mixtrial.ProcessResponse(message, systemPromot),
+    ])
+
+    const [ChatGPTResult, MixtrialResult] = reqests.filter(
+      data => (data.status = 'fulfilled'),
+    ) as PromiseFulfilledResult<any>[]
+    prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memoryChat, userCharacter)
+    insertAiHash(chatId, 'gpt-3.5-turbo-0125', question, ChatGPTResult.value)
+    insertAiHash(chatId, 'mixtral-8x7b-instruct', question, MixtrialResult.value)
+  }
 
   console.log(prompt)
 

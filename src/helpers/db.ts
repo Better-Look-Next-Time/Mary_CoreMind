@@ -1,5 +1,5 @@
 import type OpenAI from 'openai'
-import type { AvailabilityAIResult, ContentResult, CounterResult, DataAvailabilityResult, TokenResult, UserCharacterResult, UserMessageType } from '../interface/DatabaseInterface'
+import type { AvailabilityAIResult, ContentResult, CounterResult, DataAvailabilityResult, ResponseHashResult, TokenResult, UserCharacterResult, UserMessageType } from '../interface/DatabaseInterface'
 import type { HistoryUser } from '../interface/HistoryUserInterface'
 import type { ModelNameType, ModelRoleType } from './../models/openai/types'
 
@@ -11,7 +11,7 @@ const historyError: OpenAI.Chat.ChatCompletionMessageParam[] = [{ content: 'Пр
 
 export function createTables() {
   const tables = db.query(`SELECT name FROM sqlite_master WHERE type='table'`).all()
-  if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message' || table.name === 'ai_availability')) {
+  if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message' || table.name === 'ai_availability' || table.name === 'hash_storage')) {
     db.query(
       `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model" TEXT, "type" TEXT, "tokens" INTEGER, "counter" INTEGER  )`,
     ).run()
@@ -20,6 +20,9 @@ export function createTables() {
     ).run()
     db.query(
       `CREATE TABLE "ai_availability" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT, "model" TEXT, "is_active" INTEGER, "next_available_date" TEXT)`,
+    ).run()
+    db.query(
+      `CREATE TABLE "hash_storage" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT, "chat_id"  TEXT,  "query" TEXT, "response" TEXT, "model" TEXT )`,
     ).run()
   }
 }
@@ -54,6 +57,15 @@ export function insertUsersMessage(chat_id: string, user_id: string, type: UserM
 export function insertAIAvailability(model: ModelNameType, status: boolean, data: Date) {
   try {
     db.query(`INSERT INTO "ai_availability" (model, is_active, next_available_date) VALUES (?1, ?2, ?3)`).run(model, status, data.toString())
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
+export function insertAiHash(chat_id: string, model: ModelNameType, query: string, response: string) {
+  try {
+    db.query(`INSERT INTO "hash_storage" (chat_id, model, query, response ) VALUES (?1, ?2, ?3, ?4)`).run(chat_id, model, query, response)
   }
   catch (error) {
     console.log(error)
@@ -157,5 +169,16 @@ export function getDataAIAvailability(model: ModelNameType) {
   catch (error) {
     console.log(error)
     return new Date()
+  }
+}
+
+export function getHashQuery(chat_id: string, model: ModelNameType, query: string) {
+  try {
+    const hash = db.query(`SELECT response FROM hash_storage WHERE chat_id = ?1 AND model = ?2 AND query LIKE '%' || ?3 || '%' LIMIT 1`).get(chat_id, model, query) as ResponseHashResult
+    return hash?.response ?? null
+  }
+  catch (error) {
+    console.log(error)
+    return null
   }
 }
