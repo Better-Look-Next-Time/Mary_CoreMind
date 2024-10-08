@@ -15,7 +15,7 @@ import { getTime } from './helpers/time'
 import { memoryCompression } from './models/openai/compresed'
 import { OpenAIModel } from './models/openai/openai'
 
-const modelArray: ModelNameType[] = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'mixtral-8x7b-instruct']
+const modelArray: ModelNameType[] = ['llama-3.1-8b-instruct', 'mixtral-8x7b-instruct']
 
 export async function mary(question: string, chatId: string, userName: string, userId: string) {
   createTables()
@@ -36,7 +36,7 @@ export async function mary(question: string, chatId: string, userName: string, u
 
   console.log(hashList)
 
-  const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
+  const llama_31_8B = new OpenAIModel(chatId, 'llama-3.1-8b-instruct', 0.3, 1000)
   const chatGPT_4 = new OpenAIModel('', 'gpt-4o-mini', 0.7, 1000)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const memoryChat = getMemoryChat(chatId)
@@ -51,7 +51,7 @@ export async function mary(question: string, chatId: string, userName: string, u
   }
   else {
     const reqests = await Promise.allSettled([
-      chatGPT_1106.ProcessResponse(message, systemPromot),
+      llama_31_8B.ProcessResponse(message, systemPromot),
       mixtrial.ProcessResponse(message, systemPromot),
     ])
 
@@ -59,7 +59,7 @@ export async function mary(question: string, chatId: string, userName: string, u
       data => (data.status = 'fulfilled'),
     ) as PromiseFulfilledResult<any>[]
     prompt = connectorMary(question, userName, ChatGPTResult.value, MixtrialResult.value, memoryChat, userCharacter)
-    insertAiHash(chatId, 'gpt-3.5-turbo-0125', question, ChatGPTResult.value)
+    insertAiHash(chatId, 'llama-3.1-8b-instruct', question, ChatGPTResult.value)
     insertAiHash(chatId, 'mixtral-8x7b-instruct', question, MixtrialResult.value)
   }
 
@@ -78,7 +78,7 @@ export async function mary(question: string, chatId: string, userName: string, u
   const tokens = getTokens(chatId, 'mixtral-8x7b-instruct')
 
   if (tokens >= 1000) {
-    const historyChat = getHistoryChat(chatId, 'gpt-3.5-turbo-1106', getCounterChat(chatId, 'gpt-3.5-turbo-1106'))
+    const historyChat = getHistoryChat(chatId, 'llama-3.1-8b-instruct', getCounterChat(chatId, 'llama-3.1-8b-instruct'))
     const historyUser = getHistoryUser(chatId, userId, getCounterUser(chatId, userId))
     const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
     insertUsersMessage(chatId, userId, 'character', userCharacter, 1)
