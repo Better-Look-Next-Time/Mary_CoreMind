@@ -37,7 +37,7 @@ export async function mary(question: string, chatId: string, userName: string, u
   console.log(hashList)
 
   const chatGPT_1106 = new OpenAIModel(chatId, 'gpt-3.5-turbo-1106', 0.3, 1000)
-  const chatGPT_0125 = new OpenAIModel('', 'gpt-3.5-turbo-1106', 0.7, 1000)
+  const chatGPT_4 = new OpenAIModel('', 'gpt-4o-mini', 0.7, 1000)
   const mixtrial = new OpenAIModel(chatId, 'mixtral-8x7b-instruct', 0.3, 1000)
   const memoryChat = getMemoryChat(chatId)
   const userCharacter = getUserCharacter(chatId, userId)
@@ -65,8 +65,8 @@ export async function mary(question: string, chatId: string, userName: string, u
 
   console.log(prompt)
 
-  const answer = await chatGPT_0125.Request([{ role: 'user', content: prompt }]) ?? 'Прости произошли проблемы'
-  chatGPT_0125.ChangeToStatus()
+  const answer = await chatGPT_4.Request([{ role: 'system', content: systemPromot }, { role: 'user', content: prompt }]) ?? 'Прости произошли проблемы'
+  chatGPT_4.ChangeToStatus()
   modelArray.forEach(async (model) => {
     const counter = getCounterChat(chatId, model)
     const tokens = getTokens(chatId, model) + counterTokens(answer)
