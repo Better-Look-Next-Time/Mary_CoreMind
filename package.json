@@ -1,19 +1,28 @@
 {
-  "name": "mary",
-  "module": "index.ts",
+  "name": "@mary/CoreMind",
   "type": "module",
+  "version": "0.0.2",
+  "description": "Mary Core",
+  "author": "Karter_Kein",
+  "license": "MIT",
+  "module": "index.ts",
+
   "scripts": {
-    "prettier": "prettier . -w"
+    "prettier": "prettier . -w",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
-    "openai": "^4.40.0"
+    "axios": "^1.7.7",
+    "openai": "^4.67.3"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "prettier": "^3.2.5"
+    "@antfu/eslint-config": "^3.7.3",
+    "@types/bun": "^1.1.10",
+    "eslint": "^9.12.0",
+    "prettier": "^3.3.3"
   }
 }
