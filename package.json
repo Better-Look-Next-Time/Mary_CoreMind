@@ -1,12 +1,11 @@
 {
-  "name": "@mary/CoreMind",
+  "name": "@mary/core",
   "type": "module",
   "version": "0.0.1",
   "description": "Mary Core",
   "author": "Karter_Kein",
   "license": "MIT",
   "module": "index.ts",
-
   "scripts": {
     "prettier": "prettier . -w",
     "lint": "eslint .",
