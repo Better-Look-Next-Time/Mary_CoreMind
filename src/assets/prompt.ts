@@ -37,7 +37,10 @@ export function connectorMary(question: string, userName: string, memoryChat: st
     : `
     ### This is the character of ${userName}: ${userCharacter}
   `
-  const thoughts = thoughtsList.join('/n -')
+  let thoughts = ''
+  thoughtsList.forEach((text, index) => {
+    thoughts += `${index + 1}. ${text} \n`
+  })
   return `
 ### Who you are:
       # YOU playing the role of the central brain of several neural networks.

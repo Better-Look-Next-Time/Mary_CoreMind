@@ -2,7 +2,7 @@ import type { ModelNameType } from './src/models/openai/types'
 import { systemPromot } from './src/assets/character'
 import { connectorMary, createQuestion } from './src/assets/prompt'
 import { counterTokens } from './src/helpers/counterTokens'
-import { getCounterChat, getCounterUser, getHashQuery, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertAiHash, insertChatMemory, insertChatMessages, insertUsersMessage } from './src/helpers/db'
+import { createTables, getCounterChat, getCounterUser, getHashQuery, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertAiHash, insertChatMemory, insertChatMessages, insertUsersMessage } from './src/helpers/db'
 import { memoryCompression } from './src/models/openai/compresed'
 import { OpenAIModel } from './src/models/openai/openai'
 
@@ -32,6 +32,7 @@ export class Mary {
     this.message = createQuestion(this.userName, this.question)
     this.chatId = chatId
     this.userId = userId
+    createTables()
   }
 
   async RequestForThoughts() {
@@ -51,7 +52,7 @@ export class Mary {
     this.thoughtsArray.forEach((modelName, index) => {
       this.SaveHash(modelName, thoughts[index])
     })
-
+    insertUsersMessage(this.chatId, this.userId, 'message', this.question, getCounterUser(this.chatId, this.userId) + 1)
     return thoughts
   }
 
@@ -103,12 +104,15 @@ export class Mary {
   }
 
   async Request() {
+    console.log('Я работаю')
     const hashList = this.getHash()
     if (hashList.length !== 0) {
+      console.log('hash activated')
       const answer = await this.connector(hashList)
       return answer
     }
     else {
+      console.log('hash diactivate')
       const thoughtsArray = await this.RequestForThoughts()
       const answer = await this.connector(thoughtsArray)
       return answer
