@@ -2,6 +2,8 @@ import type OpenAI from 'openai'
 import type { HistoryUser } from '../interface/HistoryUserInterface'
 import type { MessageLists } from '../interface/MessageLists'
 
+import { getTime } from '../helpers/time'
+
 export function userAnalysis(historyUser: HistoryUser[]): OpenAI.ChatCompletionMessageParam[] {
   return [
     { role: 'system', content: 'You are an experienced psychologist-analyst with a deep understanding of human psychology. Your task is to conduct accurate and in-depth character analysis based on text messages.' },
@@ -24,7 +26,7 @@ export function compressedMemory(messageLists: MessageLists): string {
   return `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
 }
 
-export function connectorMary(question: string, userName: string, gptAnswer: string, mixtrialAnswer: string, memoryChat: string, userCharacter: string) {
+export function connectorMary(question: string, userName: string, memoryChat: string, userCharacter: string, thoughtsList: string[]) {
   const memory = memoryChat === ''
     ? ''
     : `
@@ -35,6 +37,7 @@ export function connectorMary(question: string, userName: string, gptAnswer: str
     : `
     ### This is the character of ${userName}: ${userCharacter}
   `
+  const thoughts = thoughtsList.join('/n -')
   return `
 ### Who you are:
       # YOU playing the role of the central brain of several neural networks.
@@ -58,7 +61,14 @@ export function connectorMary(question: string, userName: string, gptAnswer: str
         ${question}
 
     ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${userName}:
-      - ${gptAnswer}
-      - ${mixtrialAnswer}
+      ${thoughts}
+  `
+}
+
+export function createQuestion(userName: string, question: string) {
+  return `
+  ### This is a "${userName}" response, compose your thoughts:
+      # datatime: [${getTime()}]
+      # question: "${question}".
   `
 }
