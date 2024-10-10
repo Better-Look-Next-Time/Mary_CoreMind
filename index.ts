@@ -6,7 +6,7 @@ import { createTables, getCounterChat, getCounterUser, getHashQuery, getHistoryC
 import { memoryCompression } from './src/models/openai/compresed'
 import { OpenAIModel } from './src/models/openai/openai'
 
-interface MaryConfig {
+export interface MaryConfig {
   thoughtsArray: ModelNameType[]
   chapter: ModelNameType
   creatorImagePrompt: ModelNameType
