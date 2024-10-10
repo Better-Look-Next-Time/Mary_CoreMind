@@ -78,6 +78,18 @@ export class OpenAIModel {
     return response
   }
 
+  async ImageGenerator(prompt: string) {
+    const response = await this.openai.images.generate({
+      model: 'flux-1-dev',
+      prompt,
+      n: 1,
+      size: '256x256',
+    })
+    const image_url = response.data[0].url
+    console.log(image_url)
+    return image_url
+  }
+
   private get GetCounter() {
     return getCounterChat(this.chatId, this.modelName)
   }

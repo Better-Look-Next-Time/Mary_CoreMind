@@ -1,6 +1,6 @@
 import type { ModelNameType } from './src/models/openai/types'
 import { systemPromot } from './src/assets/character'
-import { connectorMary, createQuestion } from './src/assets/prompt'
+import { connectorMary, createQuestion, promptToImageGen } from './src/assets/prompt'
 import { counterTokens } from './src/helpers/counterTokens'
 import { createTables, getCounterChat, getCounterUser, getHashQuery, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertAiHash, insertChatMemory, insertChatMessages, insertUsersMessage } from './src/helpers/db'
 import { memoryCompression } from './src/models/openai/compresed'
@@ -9,6 +9,7 @@ import { OpenAIModel } from './src/models/openai/openai'
 interface MaryConfig {
   thoughtsArray: ModelNameType[]
   chapter: ModelNameType
+  creatorImagePrompt: ModelNameType
 }
 
 export class Mary {
@@ -16,6 +17,7 @@ export class Mary {
   config: MaryConfig
   thoughtsArray: ModelNameType[]
   chapter: ModelNameType
+  creatorImagePrompt: ModelNameType
   // User
   question: string
   message: string
@@ -27,6 +29,7 @@ export class Mary {
     this.config = config
     this.thoughtsArray = this.config.thoughtsArray
     this.chapter = this.config.chapter
+    this.creatorImagePrompt = this.config.creatorImagePrompt
     this.question = question
     this.userName = userName
     this.message = createQuestion(this.userName, this.question)
@@ -35,7 +38,7 @@ export class Mary {
     createTables()
   }
 
-  async RequestForThoughts() {
+  private async RequestForThoughts() {
     const thoughts: any[] = []
     const thoughtsInstance: any[] = []
     this.thoughtsArray.forEach((model) => {
@@ -56,19 +59,7 @@ export class Mary {
     return thoughts
   }
 
-  SaveHash(modelName: ModelNameType, thoughts: string) {
-    insertAiHash(this.chatId, modelName, this.question, thoughts)
-  }
-
-  SaveAnswer(answer: string) {
-    this.thoughtsArray.forEach((model) => {
-      const counter = getCounterChat(this.chatId, model)
-      const tokens = getTokens(this.chatId, model) + counterTokens(answer)
-      insertChatMessages(this.chatId, answer, 'assistant', model, tokens, counter + 1)
-    })
-  }
-
-  async Compressed(tokens: number) {
+  private async Compressed(tokens: number) {
     if (tokens >= 1000) {
       const model = this.thoughtsArray[0]
       const historyChat = getHistoryChat(this.chatId, model, getCounterChat(this.chatId, model))
@@ -79,7 +70,7 @@ export class Mary {
     }
   }
 
-  async connector(thoughtsList: string[]) {
+  private async Connector(thoughtsList: string[]) {
     const chapterModel = new OpenAIModel('', this.chapter, 0.7, 1000)
     const memeoryChat = getMemoryChat(this.chatId)
     const userCharacter = getUserCharacter(this.chatId, this.userId)
@@ -92,7 +83,44 @@ export class Mary {
     return answer
   }
 
-  getHash() {
+  async Request() {
+    console.log('Я работаю')
+    const hashList = this.getHash
+    if (hashList.length !== 0) {
+      console.log('hash activated')
+      const answer = await this.Connector(hashList)
+      return answer
+    }
+    else {
+      console.log('hash diactivate')
+      const thoughtsArray = await this.RequestForThoughts()
+      const answer = await this.Connector(thoughtsArray)
+      return answer
+    }
+  }
+
+  async ImageGenerator() {
+    const ai = new OpenAIModel('', this.creatorImagePrompt, 0.5, 100)
+    const prompt = await ai.Request(promptToImageGen(this.question)) ?? 'pixel art Error'
+    console.log(prompt)
+    const image_url = await ai.ImageGenerator(prompt) ?? 'Прости я не чего сделать не смогла'
+    const answer = await this.Request()
+    return `${answer} \n ${image_url} `
+  }
+
+  private SaveHash(modelName: ModelNameType, thoughts: string) {
+    insertAiHash(this.chatId, modelName, this.question, thoughts)
+  }
+
+  private SaveAnswer(answer: string) {
+    this.thoughtsArray.forEach((model) => {
+      const counter = getCounterChat(this.chatId, model)
+      const tokens = getTokens(this.chatId, model) + counterTokens(answer)
+      insertChatMessages(this.chatId, answer, 'assistant', model, tokens, counter + 1)
+    })
+  }
+
+  get getHash() {
     const hashList: any[] = []
     this.thoughtsArray.forEach((model) => {
       const hash = getHashQuery(this.chatId, model, this.question)
@@ -101,21 +129,5 @@ export class Mary {
       }
     })
     return hashList
-  }
-
-  async Request() {
-    console.log('Я работаю')
-    const hashList = this.getHash()
-    if (hashList.length !== 0) {
-      console.log('hash activated')
-      const answer = await this.connector(hashList)
-      return answer
-    }
-    else {
-      console.log('hash diactivate')
-      const thoughtsArray = await this.RequestForThoughts()
-      const answer = await this.connector(thoughtsArray)
-      return answer
-    }
   }
 }

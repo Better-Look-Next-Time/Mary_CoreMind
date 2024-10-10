@@ -75,3 +75,9 @@ export function createQuestion(userName: string, question: string) {
       # question: "${question}".
   `
 }
+
+export function promptToImageGen(question: string): OpenAI.ChatCompletionMessageParam[] {
+  return [
+    { role: 'user', content: `Create a detailed prompt for SDXL that describes ${question}. Include style, lighting, composition, color palette, and key elements of the scene. Use English language` },
+  ]
+}
