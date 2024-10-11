@@ -5,6 +5,7 @@ import { counterTokens } from '../../helpers/counterTokens'
 import { getCounterChat, getDataAIAvailability, getHistoryChat, getStatusAI, getTokens, insertAIAvailability, insertChatMessages } from '../../helpers/db'
 
 import { errorFilter } from '../../helpers/errorFilter'
+import { blackBoxImageGen } from '../blackkBox/blackBox'
 import { requestToPhind } from '../phind/phind'
 
 export class OpenAIModel {
@@ -79,15 +80,21 @@ export class OpenAIModel {
   }
 
   async ImageGenerator(prompt: string) {
-    const response = await this.openai.images.generate({
-      model: 'flux-1-dev',
-      prompt,
-      n: 1,
-      size: '256x256',
-    })
-    const image_url = response.data[0].url
-    console.log(image_url)
-    return image_url
+    try {
+      const response = await this.openai.images.generate({
+        model: 'flux-1-dev',
+        prompt,
+        n: 1,
+        size: '256x256',
+      })
+      const image_url = response.data[0].url
+      console.log(image_url)
+      return image_url
+    }
+    catch (error) {
+      console.log(error)
+      return blackBoxImageGen(prompt)
+    }
   }
 
   private get GetCounter() {
