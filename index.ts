@@ -77,9 +77,14 @@ export class Mary {
     const prompt = connectorMary(this.question, this.userName, memeoryChat, userCharacter, thoughtsList)
     const answer = await chapterModel.Request([{ role: 'system', content: systemPromot }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
     chapterModel.ChangeToStatus()
-    this.SaveAnswer(answer)
     const tokens = getTokens(this.chatId, this.thoughtsArray[0])
-    await this.Compressed(tokens)
+    if (tokens >= 1000) {
+      await this.Compressed(tokens)
+      this.SaveAnswer(answer, true)
+    }
+    else {
+      this.SaveAnswer(answer, false)
+    }
     return answer
   }
 
@@ -112,11 +117,11 @@ export class Mary {
     insertAiHash(this.chatId, modelName, this.question, thoughts)
   }
 
-  private SaveAnswer(answer: string) {
+  private SaveAnswer(answer: string, compresed: boolean) {
     this.thoughtsArray.forEach((model) => {
       const counter = getCounterChat(this.chatId, model)
       const tokens = getTokens(this.chatId, model) + counterTokens(answer)
-      insertChatMessages(this.chatId, answer, 'assistant', model, tokens, counter + 1)
+      insertChatMessages(this.chatId, answer, 'assistant', model, compresed === true ? 0 : tokens, compresed === true ? 1 : counter + 1)
     })
   }
 
