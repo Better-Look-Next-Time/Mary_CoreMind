@@ -18,4 +18,16 @@
 1. ChatGPT-4o-mini
 2. Mixtral-8x7b
 3. Llama-3.2-8B
-4. Llama-2-7B-
+4. Llama-2-7B
+
+## Зеркала этого репозитория:
+
+Этот проект доступен на нескольких платформах для обеспечения высокой доступности
+
+- **Основной репозиторий:**
+  - [Codeberg](https://codeberg.org/Better_Look_Next_Time/Mary_CoreMind)
+
+- **Зеркала:**
+  - [GitHub](https://github.com/Better-Look-Next-Time/Mary_CoreMind)
+
+
