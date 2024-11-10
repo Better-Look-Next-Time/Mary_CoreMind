@@ -9,7 +9,8 @@ import { OpenAIModel } from './src/models/openai/openai'
 export interface MaryConfig {
   thoughtsArray: ModelNameType[]
   chapter: ModelNameType
-  creatorImagePrompt: ModelNameType
+  creatorImagePrompt: ModelNameType,
+  character? :string
 }
 
 export class Mary {
@@ -18,6 +19,7 @@ export class Mary {
   thoughtsArray: ModelNameType[]
   chapter: ModelNameType
   creatorImagePrompt: ModelNameType
+  character: string
   // User
   question: string
   message: string
@@ -30,6 +32,7 @@ export class Mary {
     this.thoughtsArray = this.config.thoughtsArray
     this.chapter = this.config.chapter
     this.creatorImagePrompt = this.config.creatorImagePrompt
+    this.character = config.character || systemPromot
     this.question = question
     this.userName = userName
     this.message = createQuestion(this.userName, this.question)
@@ -43,7 +46,7 @@ export class Mary {
     const thoughtsInstance: any[] = []
     this.thoughtsArray.forEach((model) => {
       const modelInstance = new OpenAIModel(this.chatId, model, 0.3, 1000)
-      thoughtsInstance.push(modelInstance.ProcessResponse(this.message, systemPromot))
+      thoughtsInstance.push(modelInstance.ProcessResponse(this.message, this.character))
     })
     console.log(thoughtsInstance)
     const requset = await Promise.allSettled(thoughtsInstance)
@@ -75,7 +78,7 @@ export class Mary {
     const memeoryChat = getMemoryChat(this.chatId)
     const userCharacter = getUserCharacter(this.chatId, this.userId)
     const prompt = connectorMary(this.question, this.userName, memeoryChat, userCharacter, thoughtsList)
-    const answer = await chapterModel.Request([{ role: 'system', content: systemPromot }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
+    const answer = await chapterModel.Request([{ role: 'system', content: this.character }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
     chapterModel.ChangeToStatus()
     const tokens = getTokens(this.chatId, this.thoughtsArray[0])
     if (tokens >= 1000) {
