@@ -1,5 +1,5 @@
 import type { ModelNameType } from './src/models/openai/types'
-import { systemPromot } from './src/assets/character'
+import { systemPrompt } from './src/assets/character'
 import { connectorMary, createQuestion } from './src/assets/prompt'
 import { counterTokens } from './src/helpers/counterTokens'
 import { createTables, getCounterChat, getCounterUser, getHashQuery, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertAiHash, insertChatMemory, insertChatMessages, insertUsersMessage } from './src/helpers/db'
@@ -40,7 +40,7 @@ export class Mary {
     const thoughtsInstance: any[] = []
     this.thoughtsArray.forEach((model) => {
       const modelInstance = new OpenAIModel(this.chatId, model, 0.3, 1000)
-      thoughtsInstance.push(modelInstance.ProcessResponse(this.message, systemPromot))
+      thoughtsInstance.push(modelInstance.ProcessResponse(this.message, systemPrompt))
     })
     console.log(thoughtsInstance)
     const requset = await Promise.allSettled(thoughtsInstance)
@@ -84,7 +84,7 @@ export class Mary {
     const memeoryChat = getMemoryChat(this.chatId)
     const userCharacter = getUserCharacter(this.chatId, this.userId)
     const prompt = connectorMary(this.question, this.userName, memeoryChat, userCharacter, thoughtsList)
-    const answer = await chapterModel.Request([{ role: 'system', content: systemPromot }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
+    const answer = await chapterModel.Request([{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
     chapterModel.ChangeToStatus()
     this.SaveAnswer(answer)
     const tokens = getTokens(this.chatId, this.thoughtsArray[0])
