@@ -44,5 +44,3 @@
 3. Закоммить изменения (`git commit -m 'Add some AmazingFeature'`)
 4. Пушни в ветку (`git push origin feature/AmazingFeature`)
 5. Сделай  Pull Request
-
-

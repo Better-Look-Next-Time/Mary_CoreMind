@@ -9,8 +9,8 @@ import { OpenAIModel } from './src/models/openai/openai'
 export interface MaryConfig {
   thoughtsArray: ModelNameType[]
   chapter: ModelNameType
-  creatorImagePrompt: ModelNameType,
-  character? :string
+  creatorImagePrompt: ModelNameType
+  character?: string
 }
 
 export class Mary {
@@ -27,17 +27,17 @@ export class Mary {
   userName: string
   userId: string
 
-  constructor(config: MaryConfig, question: string, chatId: string, userName: string, userId: string) {
+  constructor(config: MaryConfig) {
     this.config = config
     this.thoughtsArray = this.config.thoughtsArray
     this.chapter = this.config.chapter
     this.creatorImagePrompt = this.config.creatorImagePrompt
     this.character = config.character || systemPromot
-    this.question = question
-    this.userName = userName
+    this.question = ''
+    this.userName = ''
     this.message = createQuestion(this.userName, this.question)
-    this.chatId = chatId
-    this.userId = userId
+    this.chatId = ''
+    this.userId = ''
     createTables()
   }
 
@@ -91,7 +91,12 @@ export class Mary {
     return answer
   }
 
-  async Request() {
+  async Request(question: string, chatId: string, userName: string, userId: string) {
+    this.question = question
+    this.chatId = chatId
+    this.userName = userName
+    this.userId = userId
+    console.log(this)
     console.log('Я работаю')
     const hashList = this.getHash
     if (hashList.length !== 0) {
@@ -107,12 +112,12 @@ export class Mary {
     }
   }
 
-  async ImageGenerator() {
+  async ImageGenerator(question: string, chatId: string, userName: string, userId: string) {
     const ai = new OpenAIModel('', this.creatorImagePrompt, 0.5, 100)
-    const prompt = await ai.Request(promptToImageGen(this.question)) ?? 'pixel art Error'
+    const prompt = await ai.Request(promptToImageGen(question)) ?? 'pixel art Error'
     console.log(prompt)
     const image_url = await ai.ImageGenerator(prompt) ?? 'Прости я не чего сделать не смогла'
-    const answer = await this.Request()
+    const answer = await this.Request(question, chatId, userName, userId)
     return `${answer} \n ${image_url} `
   }
 
