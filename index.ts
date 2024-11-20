@@ -35,7 +35,7 @@ export class Mary {
     this.character = config.character || systemPromot
     this.question = ''
     this.userName = ''
-    this.message = createQuestion(this.userName, this.question)
+    this.message = ''
     this.chatId = ''
     this.userId = ''
     createTables()
@@ -96,6 +96,7 @@ export class Mary {
     this.chatId = chatId
     this.userName = userName
     this.userId = userId
+    this.message = createQuestion(this.userName, this.question)
     console.log(this)
     console.log('Я работаю')
     const hashList = this.getHash
