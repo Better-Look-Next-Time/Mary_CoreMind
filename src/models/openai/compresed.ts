@@ -4,8 +4,9 @@ import type { MessageLists } from '../../interface/MessageLists'
 import { sleep } from 'bun'
 import { compressedMemory, userAnalysis } from '../../assets/prompt'
 import { OpenAIModel } from './openai'
+import { requestToPhind } from '../phind/phind'
 
-const Llama = new OpenAIModel('', 'llama-2-7b-chat', 0.3, 400)
+const Llama = new OpenAIModel('', 'llama-3.1-8b-instruct', 0.3, 400)
 
 export async function memoryCompression(historyChat: OpenAI.Chat.ChatCompletionMessageParam[], historyUser: HistoryUser[]) {
   const messageLists: MessageLists = {
@@ -18,9 +19,9 @@ export async function memoryCompression(historyChat: OpenAI.Chat.ChatCompletionM
       messageLists[message.role].push(message.content as string)
     }
   })
-  const commpresedMemory = await Llama.Request([{ role: 'user', content: compressedMemory(messageLists) }]) ?? ''
+  const commpresedMemory = await Llama.Request([{ role: 'user', content: compressedMemory(messageLists) }]) ?? requestToPhind([{ role: 'user', content: compressedMemory(messageLists) }])
   await sleep(1000)
-  const userCharacter = await Llama.Request(userAnalysis(historyUser)) ?? ''
+  const userCharacter = await Llama.Request(userAnalysis(historyUser)) ?? requestToPhind(userAnalysis(historyUser))
 
   return { commpresedMemory, userCharacter }
 }

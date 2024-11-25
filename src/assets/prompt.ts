@@ -78,6 +78,6 @@ export function createQuestion(userName: string, question: string) {
 
 export function promptToImageGen(question: string): OpenAI.ChatCompletionMessageParam[] {
   return [
-    { role: 'user', content: `Create a detailed prompt for SDXL that describes ${question}. Include style, lighting, composition, color palette, and key elements of the scene. Use English language` },
+    { role: 'user', content: `Create a concise yet detailed prompt for Flux (an AI image generator) describing ${question}. Include key aspects: style, lighting, composition, and color palette. Optimize for Flux's capabilities. Keep within 1024 tokens. Use clear, specific English language for optimal AI interpretation and image generation.`, }
   ]
 }
