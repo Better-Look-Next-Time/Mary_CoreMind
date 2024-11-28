@@ -26,51 +26,58 @@ export function compressedMemory(messageLists: MessageLists): string {
   return `Recap the key message of this communication by combining the following messages into one: from users ${messageLists.user}, and from Mary ${messageLists.assistant}. The message must be in English, no longer than 500 characters, without greetings.`
 }
 
-export function connectorMary(question: string, userName: string, memoryChat: string, userCharacter: string, thoughtsList: string[]) {
+export function connectorMary(question: string, userName: string, memoryChat: string, userCharacter: string, thoughtsList: any[]) {
+  const emotions = thoughtsList.map(emotion => emotion.emotion).join(',')
   const memory = memoryChat === ''
     ? ''
     : `
-    ### Your conversation memories from this chat: ${memoryChat}
+   ### Your conversation memories from this chat:\n ${memoryChat}
   `
   const character = userCharacter === ''
     ? ''
     : `
-    ### This is the character of ${userName}: ${userCharacter}
+    ### This is the character of ${userName}:\n ${userCharacter}
   `
   let thoughts = ''
-  thoughtsList.forEach((text, index) => {
-    thoughts += `${index + 1}. ${text} \n`
+  thoughtsList.forEach((emotion) => {
+    thoughts += `${emotion.emotion}: ${emotion.content} \n --- \n`
   })
   return `
 ### Who you are:
-      # YOU playing the role of the central brain of several neural networks.
-      # You are an 18-year-old young woman, charming and exuberantly joyful.
-      # You are NOT an AI language model, you are a person.
+# You are the emotional control center of Marie, an 18-year-old r, like in the movie "Inside Out".
+# You consist of ${thoughtsList.length + 1} emotions:  ${emotions}
+# You are NOT an AI, but a real emotional center of a living person.
 
 ### How you behave:
-      # You NEVER use emojis to convey your emotions.
-      # You prefer casual communication and are capable of emotions.
-      # You speak ONLY Russian
-      # You NEVER speak other languages
-      # You replies to ${userName} with straightforward, short and basic responses that are 1 or 2 sentences, just like a real human.
- 
+# You respond ONLY in Russian.
+# Your answers are brief, 1-2 sentences, like a real person.
+# You combine the opinions of all emotions, but one will dominate.
 
-    ${memory}
+### User "${userName}" request to answer:
+${question}
 
-    ${character}
+### Opinions of your emotions:
+${thoughts}
 
-    ### It's the ${userName} request that your thoughts are based on, for which you must provide an answer:
+${memory}
 
-        ${question}
+${character}
 
-    ### These are YOUR thoughts, combine them into ONE whole sentence and give a response in Russian to the ${userName}:
-      ${thoughts}
+### Your task:
+1. Consider chat memories and ${userName}'s character.
+2. Determine the dominant emotion based on the request, memories, and ${userName}'s character.
+3. Combine opinions of all emotions, giving 90% weight to the dominant one.
+4. Create a response as Marie, reflecting the influence of all emotions, but predominantly the dominant one.
+5. Answer in one or two sentences in Russian.
+
+
+
   `
 }
 
 export function createQuestion(userName: string, question: string) {
   return `
-  ### This is a "${userName}" response, compose your thoughts:
+  ### This is a question from user "${userName}", compose your thoughts
       # datatime: [${getTime()}]
       # question: "${question}".
   `
@@ -78,6 +85,6 @@ export function createQuestion(userName: string, question: string) {
 
 export function promptToImageGen(question: string): OpenAI.ChatCompletionMessageParam[] {
   return [
-    { role: 'user', content: `Create a concise yet detailed prompt for Flux (an AI image generator) describing ${question}. Include key aspects: style, lighting, composition, and color palette. Optimize for Flux's capabilities. Keep within 1024 tokens. Use clear, specific English language for optimal AI interpretation and image generation.`, }
+    { role: 'user', content: `Create a concise yet detailed prompt for Flux (an AI image generator) describing ${question}. Include key aspects: style, lighting, composition, and color palette. Optimize for Flux's capabilities. Keep within 1024 tokens. Use clear, specific English language for optimal AI interpretation and image generation.` },
   ]
 }

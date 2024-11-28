@@ -1,3 +1,4 @@
+import type { Emotion } from './src/interface/emotionsInterface'
 import type { ModelNameType } from './src/models/openai/types'
 import { systemPromot } from './src/assets/character'
 import { connectorMary, createQuestion, promptToImageGen } from './src/assets/prompt'
@@ -7,7 +8,7 @@ import { memoryCompression } from './src/models/openai/compresed'
 import { OpenAIModel } from './src/models/openai/openai'
 
 export interface MaryConfig {
-  thoughtsArray: ModelNameType[]
+  emotionsArray: Emotion[]
   chapter: ModelNameType
   creatorImagePrompt: ModelNameType
   character?: string
@@ -16,7 +17,7 @@ export interface MaryConfig {
 export class Mary {
   // Config
   config: MaryConfig
-  thoughtsArray: ModelNameType[]
+  emotionsArray: Emotion[]
   chapter: ModelNameType
   creatorImagePrompt: ModelNameType
   character: string
@@ -29,7 +30,7 @@ export class Mary {
 
   constructor(config: MaryConfig) {
     this.config = config
-    this.thoughtsArray = this.config.thoughtsArray
+    this.emotionsArray = this.config.emotionsArray
     this.chapter = this.config.chapter
     this.creatorImagePrompt = this.config.creatorImagePrompt
     this.character = config.character || systemPromot
@@ -44,19 +45,19 @@ export class Mary {
   private async RequestForThoughts() {
     const thoughts: any[] = []
     const thoughtsInstance: any[] = []
-    this.thoughtsArray.forEach((model) => {
-      const modelInstance = new OpenAIModel(this.chatId, model, 0.3, 1000)
-      thoughtsInstance.push(modelInstance.ProcessResponse(this.message, this.character))
+    this.emotionsArray.forEach((emtion: Emotion) => {
+      const modelInstance = new OpenAIModel(this.chatId, emtion.model, 0.3, 1000)
+      thoughtsInstance.push(modelInstance.ProcessResponse(`${emtion.request} \n ${this.message}`, this.character))
     })
     console.log(thoughtsInstance)
     const requset = await Promise.allSettled(thoughtsInstance)
     const result = requset.filter(data => data.status === 'fulfilled')
-    result.forEach((model) => {
-      thoughts.push(model.value)
+    result.forEach((answer, index) => {
+      thoughts.push({ emotion: this.emotionsArray[index].emotion, content: answer.value })
     })
 
-    this.thoughtsArray.forEach((modelName, index) => {
-      this.SaveHash(modelName, thoughts[index])
+    this.emotionsArray.forEach(({ model }, index) => {
+      this.SaveHash(model, thoughts[index])
     })
     insertUsersMessage(this.chatId, this.userId, 'message', this.question, getCounterUser(this.chatId, this.userId) + 1)
     return thoughts
@@ -64,7 +65,7 @@ export class Mary {
 
   private async Compressed(tokens: number) {
     if (tokens >= 1000) {
-      const model = this.thoughtsArray[0]
+      const { model } = this.emotionsArray[0]
       const historyChat = getHistoryChat(this.chatId, model, getCounterChat(this.chatId, model))
       const historyUser = getHistoryUser(this.chatId, this.userId, getCounterUser(this.chatId, this.userId))
       const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
@@ -78,9 +79,10 @@ export class Mary {
     const memeoryChat = getMemoryChat(this.chatId)
     const userCharacter = getUserCharacter(this.chatId, this.userId)
     const prompt = connectorMary(this.question, this.userName, memeoryChat, userCharacter, thoughtsList)
+    console.log(prompt)
     const answer = await chapterModel.Request([{ role: 'system', content: this.character }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
     chapterModel.ChangeToStatus()
-    const tokens = getTokens(this.chatId, this.thoughtsArray[0])
+    const tokens = getTokens(this.chatId, this.emotionsArray[0].model)
     if (tokens >= 1000) {
       await this.Compressed(tokens)
       this.SaveAnswer(answer, true)
@@ -122,12 +124,12 @@ export class Mary {
     return `${answer} \n ${image_url} `
   }
 
-  private SaveHash(modelName: ModelNameType, thoughts: string) {
-    insertAiHash(this.chatId, modelName, this.question, thoughts)
+  private SaveHash(modelName: ModelNameType, thoughts: any) {
+    insertAiHash(this.chatId, modelName, this.question, thoughts.content)
   }
 
   private SaveAnswer(answer: string, compresed: boolean) {
-    this.thoughtsArray.forEach((model) => {
+    this.emotionsArray.forEach(({ model }) => {
       const counter = getCounterChat(this.chatId, model)
       const tokens = getTokens(this.chatId, model) + counterTokens(answer)
       insertChatMessages(this.chatId, answer, 'assistant', model, compresed === true ? 0 : tokens, compresed === true ? 1 : counter + 1)
@@ -136,7 +138,7 @@ export class Mary {
 
   get getHash() {
     const hashList: any[] = []
-    this.thoughtsArray.forEach((model) => {
+    this.emotionsArray.forEach(({ model }) => {
       const hash = getHashQuery(this.chatId, model, this.question)
       if (hash !== null) {
         hashList.push(hash)

@@ -3,8 +3,8 @@ import type { HistoryUser } from '../../interface/HistoryUserInterface'
 import type { MessageLists } from '../../interface/MessageLists'
 import { sleep } from 'bun'
 import { compressedMemory, userAnalysis } from '../../assets/prompt'
-import { OpenAIModel } from './openai'
 import { requestToPhind } from '../phind/phind'
+import { OpenAIModel } from './openai'
 
 const Llama = new OpenAIModel('', 'llama-3.1-8b-instruct', 0.3, 400)
 
