@@ -14,20 +14,22 @@ export class OpenAIModel {
   private openai: OpenAI
   private temperature: ModelTemperatureType
   private max_tokens: ModelMaxTokensType
+  private emotion: string
 
-  constructor(chatId: string, modelName: ModelNameType, temperature: ModelTemperatureType, max_tokens: ModelMaxTokensType) {
+  constructor(chatId: string, modelName: ModelNameType, temperature: ModelTemperatureType, max_tokens: ModelMaxTokensType, emotion: string) {
     this.openai = new OpenAI({
       baseURL: env.NAGA_BASE_URL,
       apiKey: env.NAGA_KEY,
     })
     this.chatId = chatId
+    this.emotion = emotion
     this.modelName = modelName
     this.temperature = temperature
     this.max_tokens = max_tokens
   }
 
   private GetTokens(question: string) {
-    return getTokens(this.chatId, this.modelName) + counterTokens(question)
+    return getTokens(this.chatId, this.emotion) + counterTokens(question)
   }
 
   ChangeToStatus() {
@@ -70,9 +72,10 @@ export class OpenAIModel {
 
   async ProcessResponse(question: string, system: string) {
     const tokens = this.GetTokens(question)
-    insertChatMessages(this.chatId, system, 'system', this.modelName, tokens, this.GetCounter)
-    insertChatMessages(this.chatId, question, 'user', this.modelName, tokens, this.GetCounter) // question for User
-    const history = getHistoryChat(this.chatId, this.modelName, this.GetCounter)
+    insertChatMessages(this.chatId, system, 'system', this.modelName, this.emotion, tokens, this.GetCounter)
+    insertChatMessages(this.chatId, question, 'user', this.modelName, this.emotion, tokens, this.GetCounter) // question for User
+    const history = getHistoryChat(this.chatId, this.emotion, this.GetCounter)
+    console.log(history)
     const response = await this.Request(history)
     console.log(response)
     this.ChangeToStatus()
@@ -98,6 +101,6 @@ export class OpenAIModel {
   }
 
   private get GetCounter() {
-    return getCounterChat(this.chatId, this.modelName)
+    return getCounterChat(this.chatId, this.emotion)
   }
 }

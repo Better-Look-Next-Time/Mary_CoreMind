@@ -35,9 +35,10 @@ export async function requestToPhind(history: OpenAI.Chat.ChatCompletionMessageP
     const answerList = answerAI.split('data: ')
     answerList.splice(0, 2)
     answerList.pop()
-    return createMessage(answerList)
+    return createMessage(answerList) 
   }
   catch (error) {
     console.log(`error${error}`)
+    return ''
   }
 }

@@ -45,9 +45,9 @@ export class Mary {
   private async RequestForThoughts() {
     const thoughts: any[] = []
     const thoughtsInstance: any[] = []
-    this.emotionsArray.forEach((emtion: Emotion) => {
-      const modelInstance = new OpenAIModel(this.chatId, emtion.model, 0.3, 1000)
-      thoughtsInstance.push(modelInstance.ProcessResponse(`${emtion.request} \n ${this.message}`, this.character))
+    this.emotionsArray.forEach(({ emotion, request, model } :Emotion ) => {
+      const modelInstance = new OpenAIModel(this.chatId, model, 0.3, 1000, emotion )
+      thoughtsInstance.push(modelInstance.ProcessResponse(`${request} \n ${this.message}`, this.character))
     })
     console.log(thoughtsInstance)
     const requset = await Promise.allSettled(thoughtsInstance)
@@ -63,28 +63,27 @@ export class Mary {
     return thoughts
   }
 
-  private async Compressed(tokens: number) {
-    if (tokens >= 1000) {
-      const { model } = this.emotionsArray[0]
-      const historyChat = getHistoryChat(this.chatId, model, getCounterChat(this.chatId, model))
+  private async Compressed() {
+      const { emotion } = this.emotionsArray[0]
+      const historyChat = getHistoryChat(this.chatId, emotion, getCounterChat(this.chatId, emotion))
       const historyUser = getHistoryUser(this.chatId, this.userId, getCounterUser(this.chatId, this.userId))
       const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
       insertUsersMessage(this.chatId, this.userId, 'character', userCharacter, 1)
       insertChatMemory(this.chatId, commpresedMemory, 1)
-    }
   }
 
   private async Connector(thoughtsList: string[]) {
-    const chapterModel = new OpenAIModel('', this.chapter, 0.7, 1000)
+    const chapterModel = new OpenAIModel('', this.chapter, 0.7, 1000, '')
     const memeoryChat = getMemoryChat(this.chatId)
     const userCharacter = getUserCharacter(this.chatId, this.userId)
     const prompt = connectorMary(this.question, this.userName, memeoryChat, userCharacter, thoughtsList)
     console.log(prompt)
     const answer = await chapterModel.Request([{ role: 'system', content: this.character }, { role: 'user', content: prompt }]) ?? 'Прости произошла ошибка'
     chapterModel.ChangeToStatus()
-    const tokens = getTokens(this.chatId, this.emotionsArray[0].model)
-    if (tokens >= 1000) {
-      await this.Compressed(tokens)
+    const tokens = getTokens(this.chatId, this.emotionsArray[0].emotion)
+    console.log(tokens)
+    if (tokens >= 300) {
+      await this.Compressed()
       this.SaveAnswer(answer, true)
     }
     else {
@@ -116,7 +115,7 @@ export class Mary {
   }
 
   async ImageGenerator(question: string, chatId: string, userName: string, userId: string) {
-    const ai = new OpenAIModel('', this.creatorImagePrompt, 0.5, 100)
+    const ai = new OpenAIModel('', this.creatorImagePrompt, 0.5, 100, '')
     const prompt = await ai.Request(promptToImageGen(question)) ?? 'pixel art Error'
     console.log(prompt)
     const image_url = await ai.ImageGenerator(prompt) ?? 'Прости я не чего сделать не смогла'
@@ -129,10 +128,10 @@ export class Mary {
   }
 
   private SaveAnswer(answer: string, compresed: boolean) {
-    this.emotionsArray.forEach(({ model }) => {
-      const counter = getCounterChat(this.chatId, model)
-      const tokens = getTokens(this.chatId, model) + counterTokens(answer)
-      insertChatMessages(this.chatId, answer, 'assistant', model, compresed === true ? 0 : tokens, compresed === true ? 1 : counter + 1)
+    this.emotionsArray.forEach(({ emotion, model }) => {
+      const counter = getCounterChat(this.chatId, emotion)
+      const tokens = getTokens(this.chatId, emotion) + counterTokens(answer)
+      insertChatMessages(this.chatId, answer, 'assistant', model, emotion, compresed === true ? 0 : tokens, compresed === true ? 1 : counter + 1)
     })
   }
 

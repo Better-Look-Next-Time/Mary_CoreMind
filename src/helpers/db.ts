@@ -13,7 +13,7 @@ export function createTables() {
   const tables = db.query(`SELECT name FROM sqlite_master WHERE type='table'`).all()
   if (!tables.some((table: any) => table.name === 'chat_messages' || table.name === 'users_message' || table.name === 'ai_availability' || table.name === 'hash_storage')) {
     db.query(
-      `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model" TEXT, "type" TEXT, "tokens" INTEGER, "counter" INTEGER  )`,
+      `CREATE TABLE "chat_messages" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT,  "chat_id" TEXT, "content" TEXT, "role" TEXT, "model" TEXT, "emotion" TEXT, "type" TEXT, "tokens" INTEGER, "counter" INTEGER  )`,
     ).run()
     db.query(
       `CREATE TABLE "users_message" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "chat_id" TEXT, "user_id" TEXT, "type" TEXT,  "content" TEXT, "counter" INTEGER )`,
@@ -27,9 +27,9 @@ export function createTables() {
   }
 }
 
-export function insertChatMessages(chat_id: string, content: string, role: ModelRoleType, model: ModelNameType, tokens: number, counter: number) {
+export function insertChatMessages(chat_id: string, content: string, role: ModelRoleType, model: ModelNameType, emotion: string, tokens: number, counter: number) {
   try {
-    db.query(`INSERT INTO "chat_messages" (chat_id, content, role, model, type, tokens, counter) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`).run(chat_id, content, role, model, 'message', tokens, counter)
+    db.query(`INSERT INTO "chat_messages" (chat_id, content, role, model, emotion,  type, tokens, counter) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`).run(chat_id, content, role, model, emotion, 'message', tokens, counter)
   }
   catch (error) {
     console.log(error)
@@ -72,9 +72,9 @@ export function insertAiHash(chat_id: string, model: ModelNameType, query: strin
   }
 }
 
-export function getHistoryChat(chat_id: string, model: ModelNameType, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
+export function getHistoryChat(chat_id: string, emotion: string, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
   try {
-    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 AND type = 'message'  ORDER BY id DESC LIMIT ?3`).all(chat_id, model, counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
+    const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND emotion = ?2 AND type = 'message'  ORDER BY id DESC LIMIT ?3`).all(chat_id, emotion, counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
     return history.reverse()
   }
   catch (error) {
@@ -104,9 +104,9 @@ export function getHistoryUser(chat_id: string, user_id: string, counter: number
   }
 }
 
-export function getCounterChat(chat_id: string, model: ModelNameType) {
+export function getCounterChat(chat_id: string, emotion: string) {
   try {
-    const counter = db.query(`SELECT counter FROM "chat_messages" WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC `).get(chat_id, model) as CounterResult
+    const counter = db.query(`SELECT counter FROM "chat_messages" WHERE chat_id = ?1 AND emotion = ?2 ORDER BY id DESC `).get(chat_id, emotion) as CounterResult
     return counter?.counter ?? 1
   }
   catch (error) {
@@ -126,9 +126,9 @@ export function getCounterUser(chat_id: string, user_id: string) {
   }
 }
 
-export function getTokens(chat_id: string, model: ModelNameType) {
+export function getTokens(chat_id: string, emotion: string) {
   try {
-    const tokens = db.query(`SELECT tokens FROM 'chat_messages' WHERE chat_id = ?1 AND model = ?2 ORDER BY id DESC`).get(chat_id, model) as TokenResult
+    const tokens = db.query(`SELECT tokens FROM 'chat_messages' WHERE chat_id = ?1 AND emotion = ?2 ORDER BY id DESC`).get(chat_id, emotion) as TokenResult
     return tokens?.tokens ?? 0
   }
   catch (error) {
@@ -162,7 +162,7 @@ export function getStatusAI(model: ModelNameType) {
 
 export function getDataAIAvailability(model: ModelNameType) {
   try {
-    const data = db.query(`SELECT next_available_date FROM ai_availability WHERE model =?1 ORDER BY id DESC LIMIT 1`).get(model) as DataAvailabilityResult
+    const data = db.query(`SELECT next_available_date FROM ai_availability WHERE model = ?1 ORDER BY id DESC LIMIT 1`).get(model) as DataAvailabilityResult
     console.log(data)
     return data?.next_available_date ? new Date(data.next_available_date) : new Date()
   }
