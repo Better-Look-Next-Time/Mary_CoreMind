@@ -45,8 +45,8 @@ export class Mary {
   private async RequestForThoughts() {
     const thoughts: any[] = []
     const thoughtsInstance: any[] = []
-    this.emotionsArray.forEach(({ emotion, request, model } :Emotion ) => {
-      const modelInstance = new OpenAIModel(this.chatId, model, 0.3, 1000, emotion )
+    this.emotionsArray.forEach(({ emotion, request, model }: Emotion) => {
+      const modelInstance = new OpenAIModel(this.chatId, model, 0.3, 1000, emotion)
       thoughtsInstance.push(modelInstance.ProcessResponse(`${request} \n ${this.message}`, this.character))
     })
     console.log(thoughtsInstance)
@@ -61,12 +61,12 @@ export class Mary {
   }
 
   private async Compressed() {
-      const { emotion } = this.emotionsArray[0]
-      const historyChat = getHistoryChat(this.chatId, emotion, getCounterChat(this.chatId, emotion))
-      const historyUser = getHistoryUser(this.chatId, this.userId, getCounterUser(this.chatId, this.userId))
-      const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
-      insertUsersMessage(this.chatId, this.userId, 'character', userCharacter, 1)
-      insertChatMemory(this.chatId, commpresedMemory, 1)
+    const { emotion } = this.emotionsArray[0]
+    const historyChat = getHistoryChat(this.chatId, emotion, getCounterChat(this.chatId, emotion))
+    const historyUser = getHistoryUser(this.chatId, this.userId, getCounterUser(this.chatId, this.userId))
+    const { commpresedMemory, userCharacter } = await memoryCompression(historyChat, historyUser)
+    insertUsersMessage(this.chatId, this.userId, 'character', userCharacter, 1)
+    insertChatMemory(this.chatId, commpresedMemory, 1)
   }
 
   private async Connector(thoughtsList: string[]) {
@@ -110,8 +110,6 @@ export class Mary {
     const answer = await this.Request(question, chatId, userName, userId)
     return `${answer} \n ${image_url} `
   }
-
-
 
   private SaveAnswer(answer: string, compresed: boolean) {
     this.emotionsArray.forEach(({ emotion, model }) => {

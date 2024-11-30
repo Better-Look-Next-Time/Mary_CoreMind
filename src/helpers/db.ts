@@ -63,8 +63,6 @@ export function insertAIAvailability(model: ModelNameType, status: boolean, data
   }
 }
 
-
-
 export function getHistoryChat(chat_id: string, emotion: string, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
   try {
     const history = db.query(`SELECT content, role FROM "chat_messages" WHERE chat_id = ?1 AND emotion = ?2 AND type = 'message'  ORDER BY id DESC LIMIT ?3`).all(chat_id, emotion, counter * 3) as OpenAI.Chat.ChatCompletionMessageParam[]
@@ -164,5 +162,3 @@ export function getDataAIAvailability(model: ModelNameType) {
     return new Date()
   }
 }
-
-
