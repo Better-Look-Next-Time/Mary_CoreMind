@@ -63,14 +63,7 @@ export function insertAIAvailability(model: ModelNameType, status: boolean, data
   }
 }
 
-export function insertAiHash(chat_id: string, model: ModelNameType, query: string, response: string) {
-  try {
-    db.query(`INSERT INTO "hash_storage" (chat_id, model, query, response ) VALUES (?1, ?2, ?3, ?4)`).run(chat_id, model, query, response)
-  }
-  catch (error) {
-    console.log(error)
-  }
-}
+
 
 export function getHistoryChat(chat_id: string, emotion: string, counter: number): OpenAI.Chat.ChatCompletionMessageParam[] {
   try {
@@ -172,13 +165,4 @@ export function getDataAIAvailability(model: ModelNameType) {
   }
 }
 
-export function getHashQuery(chat_id: string, model: ModelNameType, query: string) {
-  try {
-    const hash = db.query(`SELECT response FROM hash_storage WHERE chat_id = ?1 AND model = ?2 AND query LIKE '%' || ?3 || '%' LIMIT 1`).get(chat_id, model, query) as ResponseHashResult
-    return hash?.response ?? null
-  }
-  catch (error) {
-    console.log(error)
-    return null
-  }
-}
+

@@ -3,7 +3,7 @@ import type { ModelNameType } from './src/models/openai/types'
 import { systemPromot } from './src/assets/character'
 import { connectorMary, createQuestion, promptToImageGen } from './src/assets/prompt'
 import { counterTokens } from './src/helpers/counterTokens'
-import { createTables, getCounterChat, getCounterUser, getHashQuery, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertAiHash, insertChatMemory, insertChatMessages, insertUsersMessage } from './src/helpers/db'
+import { createTables, getCounterChat, getCounterUser, getHistoryChat, getHistoryUser, getMemoryChat, getTokens, getUserCharacter, insertChatMemory, insertChatMessages, insertUsersMessage } from './src/helpers/db'
 import { memoryCompression } from './src/models/openai/compresed'
 import { OpenAIModel } from './src/models/openai/openai'
 
@@ -56,9 +56,6 @@ export class Mary {
       thoughts.push({ emotion: this.emotionsArray[index].emotion, content: answer.value })
     })
 
-    this.emotionsArray.forEach(({ model }, index) => {
-      this.SaveHash(model, thoughts[index])
-    })
     insertUsersMessage(this.chatId, this.userId, 'message', this.question, getCounterUser(this.chatId, this.userId) + 1)
     return thoughts
   }
@@ -100,18 +97,9 @@ export class Mary {
     this.message = createQuestion(this.userName, this.question)
     console.log(this)
     console.log('Я работаю')
-    const hashList = this.getHash
-    if (hashList.length !== 0) {
-      console.log('hash activated')
-      const answer = await this.Connector(hashList)
-      return answer
-    }
-    else {
-      console.log('hash diactivate')
-      const thoughtsArray = await this.RequestForThoughts()
-      const answer = await this.Connector(thoughtsArray)
-      return answer
-    }
+    const thoughtsArray = await this.RequestForThoughts()
+    const answer = await this.Connector(thoughtsArray)
+    return answer
   }
 
   async ImageGenerator(question: string, chatId: string, userName: string, userId: string) {
@@ -123,9 +111,7 @@ export class Mary {
     return `${answer} \n ${image_url} `
   }
 
-  private SaveHash(modelName: ModelNameType, thoughts: any) {
-    insertAiHash(this.chatId, modelName, this.question, thoughts.content)
-  }
+
 
   private SaveAnswer(answer: string, compresed: boolean) {
     this.emotionsArray.forEach(({ emotion, model }) => {
@@ -133,16 +119,5 @@ export class Mary {
       const tokens = getTokens(this.chatId, emotion) + counterTokens(answer)
       insertChatMessages(this.chatId, answer, 'assistant', model, emotion, compresed === true ? 0 : tokens, compresed === true ? 1 : counter + 1)
     })
-  }
-
-  get getHash() {
-    const hashList: any[] = []
-    this.emotionsArray.forEach(({ model }) => {
-      const hash = getHashQuery(this.chatId, model, this.question)
-      if (hash !== null) {
-        hashList.push(hash)
-      }
-    })
-    return hashList
   }
 }
