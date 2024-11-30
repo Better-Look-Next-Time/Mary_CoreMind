@@ -79,7 +79,7 @@ export class Mary {
     chapterModel.ChangeToStatus()
     const tokens = getTokens(this.chatId, this.emotionsArray[0].emotion)
     console.log(tokens)
-    if (tokens >= 300) {
+    if (tokens >= 1000) {
       await this.Compressed()
       this.SaveAnswer(answer, true)
     }
